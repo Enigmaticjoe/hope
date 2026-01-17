@@ -4,6 +4,8 @@
 
 This guide connects your local vLLM AI to Home Assistant's Voice Preview Edition for fully private, local voice control.
 
+**Assumption:** Ollama (11434) and Open WebUI (3000) are already installed on the host and running on their default ports.
+
 **Architecture:**
 ```
 ┌─────────────────────┐     ┌──────────────────────┐

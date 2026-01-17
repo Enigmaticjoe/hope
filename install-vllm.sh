@@ -82,11 +82,8 @@ rocm-smi --showmeminfo vram 2>/dev/null | grep -E "Total|Used" | head -4 || true
 #=============================================================================
 # STOP EXISTING SERVICES
 #=============================================================================
-log "Stopping any existing Ollama/vLLM services..."
-sudo systemctl stop ollama 2>/dev/null || true
-sudo systemctl disable ollama 2>/dev/null || true
+log "Stopping any existing vLLM services..."
 pkill -f "vllm.entrypoints" 2>/dev/null || true
-pkill -f "ollama" 2>/dev/null || true
 sleep 2
 ok "Existing services stopped"
 

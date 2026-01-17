@@ -133,15 +133,8 @@ download_model() {
 #=============================================================================
 download_ollama_models() {
     echo ""
-    echo -e "${CYAN}Downloading Ollama models for embeddings...${NC}"
+    echo -e "${CYAN}Downloading Ollama models for embeddings (host install)...${NC}"
     echo ""
-    
-    # Check if Ollama container is running
-    if ! docker ps | grep -q brain_ollama; then
-        echo -e "${YELLOW}Ollama container not running. Start it first:${NC}"
-        echo "  docker start brain_ollama"
-        return 1
-    fi
     
     local OLLAMA_MODELS=(
         "nomic-embed-text:latest"
@@ -151,12 +144,12 @@ download_ollama_models() {
     
     for model in "${OLLAMA_MODELS[@]}"; do
         echo "Pulling ${model}..."
-        docker exec brain_ollama ollama pull "${model}"
+        ollama pull "${model}"
     done
     
     echo ""
     echo -e "${GREEN}✓ Ollama models downloaded${NC}"
-    docker exec brain_ollama ollama list
+    ollama list
 }
 
 #=============================================================================
