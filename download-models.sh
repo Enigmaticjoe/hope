@@ -135,6 +135,34 @@ download_ollama_models() {
     echo ""
     echo -e "${CYAN}Downloading Ollama models for embeddings (host install)...${NC}"
     echo ""
+
+    if ! command -v ollama &>/dev/null; then
+        echo -e "${RED}Ollama CLI not found in PATH.${NC}"
+        echo "Install Ollama on the host and ensure it's running on port 11434."
+        return 1
+    fi
+
+    export OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+    local OLLAMA_TAGS_ENDPOINT="${OLLAMA_HOST%/}/api/tags"
+
+    if ! curl -fsS "${OLLAMA_TAGS_ENDPOINT}" >/dev/null 2>&1; then
+        echo -e "${YELLOW}Ollama is not responding at ${OLLAMA_HOST}.${NC}"
+        if command -v systemctl &>/dev/null; then
+            echo "Attempting to start Ollama service..."
+            sudo systemctl start ollama || true
+            sleep 2
+        fi
+        if ! curl -fsS "${OLLAMA_TAGS_ENDPOINT}" >/dev/null 2>&1; then
+            echo "Verify the host service is running: systemctl status ollama"
+            return 1
+        fi
+    fi
+
+    if ! ollama list >/dev/null 2>&1; then
+        echo -e "${YELLOW}Ollama CLI cannot list models at ${OLLAMA_HOST}.${NC}"
+        echo "Check OLLAMA_HOST and host firewall rules."
+        return 1
+    fi
     
     local OLLAMA_MODELS=(
         "nomic-embed-text:latest"
