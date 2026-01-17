@@ -3,6 +3,8 @@
 #  Pop!_OS 24.04 | Intel Ultra 7 265F | AMD RX 7900 XT (20GB) | 128GB RAM
 #
 #  vLLM runs BARE METAL (port 8000) - this stack connects to it
+#  Ollama (11434) + Open WebUI (3000) are already installed on the host
+#  and are not deployed by this stack.
 #  Deploy via: Portainer > Stacks > Add Stack > Upload
 ################################################################################
 
@@ -15,8 +17,6 @@ x-dns: &dns
   - 8.8.8.8
 
 volumes:
-  ollama_data:
-  openwebui_data:
   anythingllm_data:
   qdrant_data:
   searxng_data:
@@ -24,88 +24,6 @@ volumes:
   piper_data:
 
 services:
-  #============================================================================
-  # OLLAMA - Secondary LLM Inference (AMD GPU)
-  # Used for embeddings and smaller models while vLLM handles main inference
-  #============================================================================
-  ollama:
-    image: ollama/ollama:rocm
-    container_name: brain_ollama
-    restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
-    ports:
-      - "${OLLAMA_PORT:-11434}:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_ORIGINS=*
-      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-2}
-      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-1}
-    dns: *dns
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    ipc: host
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - seccomp=unconfined
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  #============================================================================
-  # OPEN WEBUI - Primary Chat Interface
-  # Connects to BOTH vLLM (bare metal) and Ollama (docker)
-  #============================================================================
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: brain_openwebui
-    restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
-    ports:
-      - "${WEBUI_PORT:-3000}:8080"
-    volumes:
-      - openwebui_data:/app/backend/data
-    environment:
-      # Ollama connection (docker container)
-      - OLLAMA_BASE_URL=http://ollama:11434
-      # vLLM connection (bare metal on host port 8000)
-      - OPENAI_API_BASE_URL=http://host.docker.internal:${VLLM_PORT:-8000}/v1
-      - OPENAI_API_KEY=sk-no-key-needed
-      - ENABLE_OPENAI_API=true
-      # UI Settings
-      - WEBUI_AUTH=${WEBUI_AUTH:-false}
-      - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
-      - DEFAULT_MODELS=${DEFAULT_MODELS:-}
-      - WEBUI_NAME=Brain AI
-      # RAG with SearXNG
-      - ENABLE_RAG_WEB_SEARCH=true
-      - RAG_WEB_SEARCH_ENGINE=searxng
-      - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
-    dns: *dns
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      ollama:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
   #============================================================================
   # ANYTHINGLLM - RAG & Document Processing
   #============================================================================
@@ -128,9 +46,9 @@ services:
       - OPENAI_BASE_PATH=http://host.docker.internal:${VLLM_PORT:-8000}/v1
       - OPENAI_API_KEY=sk-no-key-needed
       - OPENAI_MODEL_PREF=dolphin-2.9.3-mistral-nemo-12b
-      # Embeddings via Ollama
+      # Embeddings via host Ollama (11434)
       - EMBEDDING_ENGINE=ollama
-      - EMBEDDING_BASE_PATH=http://ollama:11434
+      - EMBEDDING_BASE_PATH=http://host.docker.internal:11434
       - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
       # Vector DB
       - VECTOR_DB=qdrant
