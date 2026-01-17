@@ -1,0 +1,63 @@
+---
+# Homepage Services Configuration
+
+- AI Services:
+    - vLLM:
+        href: http://localhost:8000/docs
+        description: Primary AI inference engine
+        icon: si-openai
+        ping: http://localhost:8000/health
+        
+    - Open WebUI:
+        href: http://localhost:3000
+        description: Chat interface
+        icon: mdi-chat
+        ping: http://localhost:3000
+        
+    - Ollama:
+        href: http://localhost:11434
+        description: Backup inference
+        icon: mdi-brain
+        ping: http://localhost:11434
+        
+    - AnythingLLM:
+        href: http://localhost:3001
+        description: Document RAG
+        icon: mdi-file-document
+        ping: http://localhost:3001
+
+- Voice Services:
+    - Whisper:
+        description: Speech to Text
+        icon: mdi-microphone
+        ping: http://localhost:10300
+        
+    - Piper:
+        description: Text to Speech
+        icon: mdi-speaker
+        ping: http://localhost:10200
+
+- Infrastructure:
+    - Portainer:
+        href: https://localhost:9443
+        description: Docker management
+        icon: si-portainer
+        ping: http://localhost:9000
+        
+    - SearXNG:
+        href: http://localhost:8888
+        description: Private search
+        icon: mdi-magnify
+        ping: http://localhost:8888
+        
+    - Qdrant:
+        href: http://localhost:6333/dashboard
+        description: Vector database
+        icon: mdi-database
+        ping: http://localhost:6333
+
+- Smart Home:
+    - Home Assistant:
+        href: http://homeassistant.local:8123
+        description: Home automation
+        icon: mdi-home-assistant
