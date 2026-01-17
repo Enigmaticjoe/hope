@@ -1,4 +1,5 @@
 ﻿Hey Claude—can you make something amazing with my "ai-ecosystem-orchestrator" skill?
+Note: Ollama (11434) and Open WebUI (3000) are already installed on the host using default ports. Any container-based references below are historical and should be treated as obsolete.
 2:48 AM
 CHIMERA: Unified AI Command Center
 I'll create a comprehensive web-based dashboard that orchestrates your entire multi-node AI ecosystem—real-time monitoring, job distribution, and unified control across The Brain, The Brawn, and your Unraid server.

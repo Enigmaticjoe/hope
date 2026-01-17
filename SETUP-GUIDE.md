@@ -21,13 +21,9 @@ A **private, local AI system** that runs entirely on your computer. No data leav
 
 Open a terminal (press `Ctrl + Alt + T`) and run these commands one at a time.
 
-### 1.1 Stop Old Services
+### 1.1 Stop Old Docker Services
 
 ```bash
-# Stop any existing Ollama
-sudo systemctl stop ollama
-sudo systemctl disable ollama
-
 # Stop all Docker containers
 docker stop $(docker ps -aq)
 docker rm -f $(docker ps -aq)
@@ -145,6 +141,8 @@ sudo systemctl enable vllm
 
 ## 📋 STEP 3: Deploy Docker Stack (10 minutes)
 
+**Note:** Ollama (11434) and Open WebUI (3000) are already installed on the host and are **not** deployed by this stack. Keep them running on their default ports.
+
 ### 3.1 Open Portainer
 
 Go to: **https://localhost:9443**
@@ -165,8 +163,6 @@ Go to: **https://localhost:9443**
 ### 3.3 Verify Everything Started
 
 In Portainer, click on your stack. You should see these containers running (green):
-- ✅ brain_ollama
-- ✅ brain_openwebui
 - ✅ brain_anythingllm
 - ✅ brain_qdrant
 - ✅ brain_searxng
@@ -181,10 +177,10 @@ Open a terminal and run:
 
 ```bash
 # Embedding model (required for document search)
-docker exec brain_ollama ollama pull nomic-embed-text:latest
+ollama pull nomic-embed-text:latest
 
 # Optional: backup chat model
-docker exec brain_ollama ollama pull llama3.2:latest
+ollama pull llama3.2:latest
 ```
 
 ---
@@ -291,8 +287,8 @@ nano ~/brain-ai/.env               # Edit config
 
 # Docker Controls
 docker ps                          # List running containers
-docker logs brain_ollama           # View Ollama logs
-docker restart brain_openwebui     # Restart Open WebUI
+docker logs brain_anythingllm      # View AnythingLLM logs
+docker restart brain_anythingllm   # Restart AnythingLLM
 ```
 
 ### Switching AI Models
