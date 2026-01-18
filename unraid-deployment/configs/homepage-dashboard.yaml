@@ -1,0 +1,66 @@
+services:
+- name: Infrastructure
+  items:
+    - name: Unraid Server
+      url: http://192.168.1.9:8008
+      icon: mdi:server
+    - name: Portainer
+      url: http://192.168.1.9:9000
+      icon: mdi:docker
+    - name: Uptime Kuma
+      url: http://192.168.1.9:3010
+      icon: mdi:heart-pulse
+    - name: Dozzle (Logs)
+      url: http://192.168.1.9:9999
+      icon: mdi:file-chart
+
+- name: Media
+  items:
+    - name: Plex
+      url: http://192.168.1.9:32400/web
+      icon: mdi:television-classic
+    - name: Sonarr
+      url: http://192.168.1.9:8989
+      icon: mdi:television-guide
+    - name: Radarr
+      url: http://192.168.1.9:7878
+      icon: mdi:movie-open
+    - name: Prowlarr
+      url: http://192.168.1.9:9696
+      icon: mdi:magnify
+    - name: Overseerr
+      url: http://192.168.1.9:5055
+      icon: mdi:monitor-eye
+    - name: Bazarr
+      url: http://192.168.1.9:6767
+      icon: mdi:translate
+    - name: Tautulli
+      url: http://192.168.1.9:8181
+      icon: mdi:chart-line
+    - name: RealDebrid (Zurg)
+      url: http://192.168.1.9:9090
+      icon: mdi:cloud-download
+
+- name: AI & Tools
+  items:
+    - name: Open WebUI (Chatbot)
+      url: http://192.168.1.9:3000
+      icon: mdi:robot
+    - name: Qdrant UI
+      url: http://192.168.1.9:6333
+      icon: mdi:database-search
+
+- name: Home Automation
+  items:
+    - name: Home Assistant
+      url: http://192.168.1.9:8123
+      icon: mdi:home-assistant
+    - name: Node-RED
+      url: http://192.168.1.9:1880
+      icon: mdi:graph-outline
+    - name: Zigbee2MQTT
+      url: http://192.168.1.9:8080
+      icon: mdi:zigbee
+    - name: ESPHome
+      url: http://192.168.1.9:6052
+      icon: mdi:chip
