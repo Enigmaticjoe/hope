@@ -1,0 +1,71 @@
+version: "3.8"
+
+# Modified version for 192.168.1.222 with port conflicts resolved
+# - Home Assistant moved to 8124 (KitchenOwl uses 8123)
+# - Zigbee2MQTT moved to 8083 (open-webui uses 8080)
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    # Changed from host mode to bridge to avoid conflicts
+    network_mode: bridge
+    ports:
+      - "8124:8123"  # Changed from host mode
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/homeassistant:/config
+      # If using a USB Zigbee/Z-Wave stick, uncomment and set the correct device:
+      # - /dev/ttyUSB0:/dev/ttyUSB0
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ${APPDATA_PATH}/mosquitto/config:/mosquitto/config
+      - ${APPDATA_PATH}/mosquitto/data:/mosquitto/data
+      - ${APPDATA_PATH}/mosquitto/log:/mosquitto/log
+
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: unless-stopped
+    ports:
+      - "1880:1880"
+    volumes:
+      - ${APPDATA_PATH}/nodered:/data
+
+  zigbee2mqtt:
+    image: zigbee2mqtt/zigbee2mqtt:latest
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      - TZ=${TZ}
+      - MQTT_SERVER=mqtt://mosquitto:1883
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+    volumes:
+      - ${APPDATA_PATH}/zigbee2mqtt:/app/data
+    ports:
+      - "8083:8080"  # Changed from 8080:8080 to avoid conflict with open-webui
+    devices:
+      # If using a USB Zigbee coordinator, uncomment and set the correct device:
+      # - /dev/ttyUSB0:/dev/ttyUSB0
+
+  esphome:
+    image: esphome/esphome:latest
+    container_name: esphome-compose
+    restart: unless-stopped
+    ports:
+      - "6052:6052"
+    volumes:
+      - ${APPDATA_PATH}/esphome-compose:/config
+    # Note: You already have ESPHome running. You may want to skip this service
+    # or migrate your existing ESPHome to this compose-managed one

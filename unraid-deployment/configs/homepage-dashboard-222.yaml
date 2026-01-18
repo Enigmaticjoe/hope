@@ -1,0 +1,96 @@
+# Homepage Dashboard Configuration for 192.168.1.222
+# Copy this to /mnt/user/appdata/homepage/config.yml
+
+services:
+- name: Infrastructure
+  items:
+    - name: Unraid Server
+      url: http://192.168.1.222:8008
+      icon: mdi:server
+    - name: Portainer
+      url: http://192.168.1.222:9000
+      icon: mdi:docker
+    - name: Uptime Kuma
+      url: http://192.168.1.222:3010
+      icon: mdi:heart-pulse
+    - name: Dozzle (Logs)
+      url: http://192.168.1.222:9999
+      icon: mdi:file-chart
+
+- name: Media
+  items:
+    - name: Plex
+      url: http://192.168.1.222:32400/web
+      icon: mdi:television-classic
+    - name: Sonarr
+      url: http://192.168.1.222:8989
+      icon: mdi:television-guide
+    - name: Radarr
+      url: http://192.168.1.222:7878
+      icon: mdi:movie-open
+    - name: Prowlarr
+      url: http://192.168.1.222:9696
+      icon: mdi:magnify
+    - name: Overseerr
+      url: http://192.168.1.222:5055
+      icon: mdi:monitor-eye
+    - name: Bazarr
+      url: http://192.168.1.222:6767
+      icon: mdi:translate
+    - name: Tautulli
+      url: http://192.168.1.222:8181
+      icon: mdi:chart-line
+    - name: RealDebrid (Zurg)
+      url: http://192.168.1.222:9090
+      icon: mdi:cloud-download
+    - name: Stremio
+      url: http://192.168.1.222:8082
+      icon: mdi:play-network
+
+- name: AI & Tools
+  items:
+    - name: Open WebUI (Chatbot)
+      url: http://192.168.1.222:8080
+      icon: mdi:robot
+    - name: Qdrant UI
+      url: http://192.168.1.222:6333
+      icon: mdi:database-search
+    - name: SearXNG
+      url: http://192.168.1.222:8081
+      icon: mdi:magnify
+    - name: n8n Automation
+      url: http://192.168.1.222:5678
+      icon: mdi:webhook
+    - name: 13Feet Ladder
+      url: http://192.168.1.222:5000
+      icon: mdi:ladder
+
+- name: Home & Utilities
+  items:
+    - name: KitchenOwl
+      url: http://192.168.1.222:8123
+      icon: mdi:food
+    - name: ESPHome
+      url: http://192.168.1.222
+      icon: mdi:chip
+    - name: Firefox
+      url: http://192.168.1.222:7814
+      icon: mdi:firefox
+    - name: Nextcloud
+      url: http://192.168.1.222:8666
+      icon: mdi:cloud
+
+- name: Home Automation (if deployed)
+  items:
+    - name: Home Assistant
+      url: http://192.168.1.222:8124
+      icon: mdi:home-assistant
+    - name: Node-RED
+      url: http://192.168.1.222:1880
+      icon: mdi:graph-outline
+    - name: Zigbee2MQTT
+      url: http://192.168.1.222:8083
+      icon: mdi:zigbee
+    - name: Mosquitto MQTT
+      url: mqtt://192.168.1.222:1883
+      icon: mdi:message-processing
