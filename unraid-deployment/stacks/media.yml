@@ -1,0 +1,148 @@
+version: "3.8"
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=latest
+      - PLEX_CLAIM=${PLEX_CLAIM}   # optional (remove after first successful claim)
+    volumes:
+      - ${APPDATA_PATH}/plex:/config
+      - ${MEDIA_PATH}/movies:/movies
+      - ${MEDIA_PATH}/tv:/tv
+      - ${MEDIA_PATH}/music:/music
+      - ${APPDATA_PATH}/plex/transcode:/transcode
+      - ${REALDEBRID_MOUNT}:/realdebrid:shared
+    ports:
+      - "32400:32400/tcp"
+      - "32469:32469/tcp"
+      - "1900:1900/udp"
+      - "32410:32410/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/sonarr:/config
+      - ${MEDIA_PATH}/tv:/tv
+      - ${MEDIA_PATH}/downloads:/downloads
+      - ${REALDEBRID_MOUNT}:/realdebrid:shared
+    ports:
+      - "8989:8989"
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/radarr:/config
+      - ${MEDIA_PATH}/movies:/movies
+      - ${MEDIA_PATH}/downloads:/downloads
+      - ${REALDEBRID_MOUNT}:/realdebrid:shared
+    ports:
+      - "7878:7878"
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/prowlarr:/config
+      - ${MEDIA_PATH}/downloads:/downloads
+    ports:
+      - "9696:9696"
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/bazarr:/config
+      - ${MEDIA_PATH}/movies:/movies
+      - ${MEDIA_PATH}/tv:/tv
+      - ${MEDIA_PATH}/downloads:/downloads
+    ports:
+      - "6767:6767"
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - LOG_LEVEL=info
+    volumes:
+      - ${APPDATA_PATH}/overseerr:/config
+    ports:
+      - "5055:5055"
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/tautulli:/config
+      - ${APPDATA_PATH}/plex:/logs:ro
+    ports:
+      - "8181:8181"
+
+  zurg:
+    image: iampuid0/pd_zurg:latest
+    container_name: zurg
+    stdin_open: true    # enable interactive for rclone
+    tty: true           # enable TTY
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - ZURG_ENABLED=true
+      - RD_API_KEY=${RD_API_KEY}
+      - PLEX_REFRESH=true
+      - RCLONE_UID=${PUID}
+      - RCLONE_GID=${PGID}
+      - RCLONE_MOUNT_NAME=pd_zurg
+      - PD_ENABLED=false    # disable Plex Debrid UI (set true if using PlexDebrid features)
+    volumes:
+      - ${APPDATA_PATH}/zurg/config:/config
+      - ${APPDATA_PATH}/zurg/log:/log
+      - ${APPDATA_PATH}/zurg/cache:/cache
+      - ${APPDATA_PATH}/zurg/RD:/zurg/RD
+      - ${REALDEBRID_MOUNT}:/data:shared
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+      - no-new-privileges
+    ports:
+      - "9090:9090"
