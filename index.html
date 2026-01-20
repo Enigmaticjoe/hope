@@ -2,8 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>jAI - Control Center</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Local AI Control Center for managing vLLM, Ollama, and home automation">
+    <meta name="theme-color" content="#e94560">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="jAI">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
     <style>
         :root {
             --bg-primary: #0f0f1a;
@@ -266,7 +281,38 @@
         @media (max-width: 768px) {
             h1 { font-size: 1.8em; }
             .grid { grid-template-columns: 1fr; }
+            .container { padding: 15px; }
+            .card { padding: 15px; }
+            .chat-messages { height: 250px; }
+            .subtitle { font-size: 0.9em; }
+            .btn { padding: 12px 20px; min-height: 44px; }
+            .model-select { min-height: 44px; }
+            .chat-input input { min-height: 44px; }
         }
+
+        /* PWA standalone mode */
+        @media (display-mode: standalone) {
+            body { padding-top: env(safe-area-inset-top); }
+            .container {
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+        }
+
+        /* Install button */
+        .install-btn {
+            display: none;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        .install-btn.show { display: inline-block; }
     </style>
 </head>
 <body>
@@ -275,12 +321,13 @@
             <h1>🧠 jAI</h1>
             <p class="subtitle">Local AI Control Center | Pop!_OS • AMD RX 7900 XT • 128GB RAM</p>
 
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;">
                 <label style="color: var(--text-dim); margin-right: 10px;">Network:</label>
                 <select id="ip-selector" class="model-select" onchange="switchNetwork()">
                     <option value="tailscale">Tailscale (100.108.197.12)</option>
                     <option value="local">Local (192.168.1.9)</option>
                 </select>
+                <button id="install-btn" class="install-btn" onclick="installApp()">Install App</button>
             </div>
 
             <div class="status-bar">
@@ -650,6 +697,42 @@
 
             // Start periodic status checks
             startStatusInterval();
+
+            // Register service worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('jAI: Service Worker registered', reg.scope))
+                    .catch(err => console.log('jAI: Service Worker registration failed', err));
+            }
+        });
+
+        // PWA Install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install button
+            document.getElementById('install-btn').classList.add('show');
+            console.log('jAI: App can be installed');
+        });
+
+        // Install the PWA
+        function installApp() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((result) => {
+                if (result.outcome === 'accepted') {
+                    console.log('jAI: App installed');
+                    document.getElementById('install-btn').classList.remove('show');
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        // Hide install button if already installed
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('install-btn').classList.remove('show');
+            console.log('jAI: App was installed');
         });
     </script>
 </body>

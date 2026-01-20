@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>jAI Icon Generator</title>
+    <style>
+        body { font-family: system-ui; background: #1a1a2e; color: #eaeaea; padding: 20px; }
+        canvas { display: block; margin: 10px 0; border: 1px solid #333; }
+        button { padding: 10px 20px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .icons { display: flex; flex-wrap: wrap; gap: 20px; }
+        .icon-item { text-align: center; }
+        a { color: #e94560; }
+    </style>
+</head>
+<body>
+    <h1>jAI Icon Generator</h1>
+    <p>Click "Generate All" then right-click each icon to save, or click "Download All" to get a zip.</p>
+    <button onclick="generateAll()">Generate All Icons</button>
+    <button onclick="downloadAll()">Download All</button>
+
+    <div class="icons" id="icons"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+
+            // Background with rounded corners
+            const radius = size * 0.2;
+            ctx.fillStyle = '#0f0f1a';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fill();
+
+            // Gradient for brain emoji
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#e94560');
+            gradient.addColorStop(1, '#a855f7');
+
+            // Draw brain emoji
+            ctx.font = `${size * 0.6}px serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🧠', size / 2, size / 2);
+        }
+
+        function generateAll() {
+            const container = document.getElementById('icons');
+            container.innerHTML = '';
+
+            sizes.forEach(size => {
+                const div = document.createElement('div');
+                div.className = 'icon-item';
+
+                const canvas = document.createElement('canvas');
+                drawIcon(canvas, size);
+
+                const label = document.createElement('p');
+                label.textContent = `${size}x${size}`;
+
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `icon-${size}.png`;
+                link.textContent = 'Download';
+
+                div.appendChild(canvas);
+                div.appendChild(label);
+                div.appendChild(link);
+                container.appendChild(div);
+            });
+        }
+
+        function downloadAll() {
+            sizes.forEach((size, i) => {
+                setTimeout(() => {
+                    const canvas = document.createElement('canvas');
+                    drawIcon(canvas, size);
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = `icon-${size}.png`;
+                    link.click();
+                }, i * 200);
+            });
+        }
+
+        // Generate on load
+        generateAll();
+    </script>
+</body>
+</html>
