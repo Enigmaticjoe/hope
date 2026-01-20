@@ -274,7 +274,15 @@
         <header>
             <h1>🧠 jAI</h1>
             <p class="subtitle">Local AI Control Center | Pop!_OS • AMD RX 7900 XT • 128GB RAM</p>
-            
+
+            <div style="margin-top: 15px;">
+                <label style="color: var(--text-dim); margin-right: 10px;">Network:</label>
+                <select id="ip-selector" class="model-select" onchange="switchNetwork()">
+                    <option value="tailscale">Tailscale (100.108.197.12)</option>
+                    <option value="local">Local (192.168.1.9)</option>
+                </select>
+            </div>
+
             <div class="status-bar">
                 <div class="status-item">
                     <span class="status-dot" id="vllm-status"></span>
@@ -322,25 +330,25 @@
             <div class="card">
                 <h3>🌐 Open WebUI</h3>
                 <p>Full-featured chat interface with RAG, web search, and multi-model support.</p>
-                <a href="http://100.108.197.12:3000" target="_blank" class="btn">Open Chat UI</a>
+                <a href="#" data-port="3000" class="btn dynamic-link">Open Chat UI</a>
             </div>
 
             <div class="card">
                 <h3>📚 AnythingLLM</h3>
                 <p>Document RAG workspace. Upload files and chat with your data.</p>
-                <a href="http://100.108.197.12:3001" target="_blank" class="btn">Open RAG</a>
+                <a href="#" data-port="3001" class="btn dynamic-link">Open RAG</a>
             </div>
 
             <div class="card">
                 <h3>🔍 SearXNG</h3>
                 <p>Private meta search engine for AI-powered web research.</p>
-                <a href="http://100.108.197.12:8888" target="_blank" class="btn">Open Search</a>
+                <a href="#" data-port="8888" class="btn dynamic-link">Open Search</a>
             </div>
 
             <div class="card">
                 <h3>🐳 Portainer</h3>
                 <p>Docker container management and monitoring dashboard.</p>
-                <a href="https://100.108.197.12:9443" target="_blank" class="btn">Open Portainer</a>
+                <a href="#" data-port="9443" data-https="true" class="btn dynamic-link">Open Portainer</a>
             </div>
 
             <div class="card">
@@ -352,8 +360,20 @@
             <div class="card">
                 <h3>📊 API Endpoints</h3>
                 <p>Direct API access for integrations and testing.</p>
-                <a href="http://100.108.197.12:8000/docs" target="_blank" class="btn">vLLM API</a>
-                <a href="http://100.108.197.12:11434" target="_blank" class="btn btn-secondary" style="margin-left:5px">Ollama</a>
+                <a href="#" data-port="8000" data-path="/docs" class="btn dynamic-link">vLLM API</a>
+                <a href="#" data-port="11434" class="btn btn-secondary dynamic-link" style="margin-left:5px">Ollama</a>
+            </div>
+
+            <div class="card">
+                <h3>💾 Unraid</h3>
+                <p>NAS and server management with Docker and VM support.</p>
+                <a href="http://192.168.1.222:8008" target="_blank" class="btn">Open Unraid</a>
+            </div>
+
+            <div class="card">
+                <h3>🔗 Tailscale</h3>
+                <p>Manage your Tailscale network and connected devices.</p>
+                <a href="https://login.tailscale.com/admin/machines" target="_blank" class="btn">Admin Console</a>
             </div>
         </section>
         
@@ -421,9 +441,15 @@
             <p>Connect Home Assistant Voice Preview Edition to these endpoints:</p>
             
             <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; margin-top: 15px; font-family: monospace;">
+                <p style="margin-bottom: 8px; color: var(--accent);">Tailscale:</p>
                 <p><strong>Whisper (STT):</strong> 100.108.197.12:10300</p>
                 <p><strong>Piper (TTS):</strong> 100.108.197.12:10200</p>
                 <p><strong>LLM API:</strong> http://100.108.197.12:8000/v1</p>
+                <hr style="border: none; border-top: 1px solid var(--bg-secondary); margin: 12px 0;">
+                <p style="margin-bottom: 8px; color: var(--accent);">Local Network:</p>
+                <p><strong>Whisper (STT):</strong> 192.168.1.9:10300</p>
+                <p><strong>Piper (TTS):</strong> 192.168.1.9:10200</p>
+                <p><strong>LLM API:</strong> http://192.168.1.9:8000/v1</p>
             </div>
             
             <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-dim);">
@@ -443,10 +469,35 @@
     <script>
         // Configuration
         const TAILSCALE_IP = '100.108.197.12';
-        const VLLM_URL = `http://${TAILSCALE_IP}:8000`;
-        const OLLAMA_URL = `http://${TAILSCALE_IP}:11434`;
-        const WEBUI_URL = `http://${TAILSCALE_IP}:3000`;
-        const WHISPER_URL = `http://${TAILSCALE_IP}:10300`;
+        const LOCAL_IP = '192.168.1.9';
+        let currentIP = TAILSCALE_IP;
+
+        // Get current URLs based on selected network
+        function getVllmUrl() { return `http://${currentIP}:8000`; }
+        function getOllamaUrl() { return `http://${currentIP}:11434`; }
+        function getWebuiUrl() { return `http://${currentIP}:3000`; }
+        function getWhisperUrl() { return `http://${currentIP}:10300`; }
+
+        // Switch network and update all dynamic links
+        function switchNetwork() {
+            const selector = document.getElementById('ip-selector');
+            currentIP = selector.value === 'tailscale' ? TAILSCALE_IP : LOCAL_IP;
+
+            // Update all dynamic links
+            document.querySelectorAll('.dynamic-link').forEach(link => {
+                const port = link.dataset.port;
+                const path = link.dataset.path || '';
+                const protocol = link.dataset.https === 'true' ? 'https' : 'http';
+                link.href = `${protocol}://${currentIP}:${port}${path}`;
+                link.target = '_blank';
+            });
+
+            // Re-run status checks with new IP
+            initStatusChecks();
+
+            // Save preference
+            localStorage.setItem('jAI-network', selector.value);
+        }
 
         // Check service status with proper error handling
         async function checkStatus(url, elementId) {
@@ -478,17 +529,16 @@
 
         // Initialize status checks
         function initStatusChecks() {
-            checkStatus(VLLM_URL + '/health', 'vllm-status');
-            checkStatus(OLLAMA_URL + '/api/tags', 'ollama-status');
-            checkStatus(WEBUI_URL + '/health', 'webui-status');
-            checkStatus(WHISPER_URL, 'whisper-status');
+            checkStatus(getVllmUrl() + '/health', 'vllm-status');
+            checkStatus(getOllamaUrl() + '/api/tags', 'ollama-status');
+            checkStatus(getWebuiUrl() + '/health', 'webui-status');
+            checkStatus(getWhisperUrl(), 'whisper-status');
+        }
 
-            // Refresh every 30 seconds
+        // Start periodic status checks
+        function startStatusInterval() {
             setInterval(() => {
-                checkStatus(VLLM_URL + '/health', 'vllm-status');
-                checkStatus(OLLAMA_URL + '/api/tags', 'ollama-status');
-                checkStatus(WEBUI_URL + '/health', 'webui-status');
-                checkStatus(WHISPER_URL, 'whisper-status');
+                initStatusChecks();
             }, 30000);
         }
         
@@ -498,18 +548,18 @@
             const messages = document.getElementById('chat-messages');
             const selector = document.getElementById('model-selector');
             const text = input.value.trim();
-            
+
             if (!text) return;
-            
+
             // Add user message
             messages.innerHTML += `<div class="message user">${escapeHtml(text)}</div>`;
             input.value = '';
             messages.scrollTop = messages.scrollHeight;
-            
+
             // Determine endpoint
             const isVllm = selector.value === 'vllm';
-            const url = isVllm ? VLLM_URL + '/v1/chat/completions' : OLLAMA_URL + '/api/chat';
-            
+            const url = isVllm ? getVllmUrl() + '/v1/chat/completions' : getOllamaUrl() + '/api/chat';
+
             try {
                 let response;
                 if (isVllm) {
@@ -542,7 +592,7 @@
             } catch (e) {
                 messages.innerHTML += `<div class="message assistant" style="color: var(--error)">Error: ${e.message}. Is the service running?</div>`;
             }
-            
+
             messages.scrollTop = messages.scrollHeight;
         }
         
@@ -588,7 +638,18 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            initStatusChecks();
+            // Restore saved network preference
+            const savedNetwork = localStorage.getItem('jAI-network');
+            if (savedNetwork) {
+                document.getElementById('ip-selector').value = savedNetwork;
+                currentIP = savedNetwork === 'tailscale' ? TAILSCALE_IP : LOCAL_IP;
+            }
+
+            // Initialize dynamic links
+            switchNetwork();
+
+            // Start periodic status checks
+            startStatusInterval();
         });
     </script>
 </body>
