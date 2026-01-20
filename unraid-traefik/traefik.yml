@@ -1,0 +1,44 @@
+# Traefik Static Configuration
+api:
+  dashboard: true
+  insecure: false
+
+log:
+  level: INFO
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik-net
+  file:
+    directory: /etc/traefik/config
+    watch: true
+
+# TLS Configuration
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict: true
+
+# For Let's Encrypt (if you have a domain)
+# certificatesResolvers:
+#   letsencrypt:
+#     acme:
+#       email: your-email@example.com
+#       storage: /etc/traefik/acme.json
+#       httpChallenge:
+#         entryPoint: web

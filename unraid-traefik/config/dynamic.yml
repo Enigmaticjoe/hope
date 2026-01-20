@@ -1,0 +1,76 @@
+# Traefik Dynamic Configuration
+# Routes to your services on the Pop!_OS machine
+
+http:
+  routers:
+    # Open WebUI
+    openwebui:
+      rule: "Host(`chat.local`)"
+      service: openwebui
+      entryPoints:
+        - websecure
+      tls: {}
+
+    # vLLM API
+    vllm:
+      rule: "Host(`vllm.local`)"
+      service: vllm
+      entryPoints:
+        - websecure
+      tls: {}
+
+    # Ollama
+    ollama:
+      rule: "Host(`ollama.local`)"
+      service: ollama
+      entryPoints:
+        - websecure
+      tls: {}
+
+    # SearXNG
+    searxng:
+      rule: "Host(`search.local`)"
+      service: searxng
+      entryPoints:
+        - websecure
+      tls: {}
+
+    # AnythingLLM
+    anythingllm:
+      rule: "Host(`rag.local`)"
+      service: anythingllm
+      entryPoints:
+        - websecure
+      tls: {}
+
+  services:
+    openwebui:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.9:3000"
+
+    vllm:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.9:8000"
+
+    ollama:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.9:11434"
+
+    searxng:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.9:8888"
+
+    anythingllm:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.9:3001"
+
+# Self-signed certificate for local use
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/local.crt
+      keyFile: /etc/traefik/certs/local.key

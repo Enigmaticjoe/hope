@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config:/etc/traefik/config:ro
+      - ./certs:/etc/traefik/certs
+      - ./acme.json:/etc/traefik/acme.json
+    environment:
+      - TZ=America/New_York  # Change to your timezone
+    networks:
+      - traefik-net
+    labels:
+      # Traefik dashboard
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.local`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      # Basic auth: admin/admin (change this!)
+      # Generate with: htpasswd -nb admin yourpassword
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$xyz$$hashedpassword"
+
+  # jAI Homepage
+  jai-web:
+    image: nginx:alpine
+    container_name: jai-web
+    restart: unless-stopped
+    volumes:
+      - /mnt/user/appdata/jai:/usr/share/nginx/html:ro
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      # HTTP
+      - "traefik.http.routers.jai.rule=Host(`jai.local`) || Host(`jai.192.168.1.222.nip.io`)"
+      - "traefik.http.routers.jai.entrypoints=web"
+      # HTTPS
+      - "traefik.http.routers.jai-secure.rule=Host(`jai.local`) || Host(`jai.192.168.1.222.nip.io`)"
+      - "traefik.http.routers.jai-secure.entrypoints=websecure"
+      - "traefik.http.routers.jai-secure.tls=true"
+      - "traefik.http.services.jai.loadbalancer.server.port=80"
+
+networks:
+  traefik-net:
+    external: true
