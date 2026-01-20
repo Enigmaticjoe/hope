@@ -1,11 +1,19 @@
-# Traefik Dynamic Configuration
-# Routes to your services on the Pop!_OS machine
+# Traefik Dynamic Configuration with nip.io
+# Access via: https://[service].192.168.1.222.nip.io
 
 http:
   routers:
+    # jAI Homepage
+    jai:
+      rule: "Host(`jai.192.168.1.222.nip.io`) || Host(`192.168.1.222.nip.io`)"
+      service: jai
+      entryPoints:
+        - websecure
+      tls: {}
+
     # Open WebUI
     openwebui:
-      rule: "Host(`chat.local`)"
+      rule: "Host(`chat.192.168.1.222.nip.io`)"
       service: openwebui
       entryPoints:
         - websecure
@@ -13,7 +21,7 @@ http:
 
     # vLLM API
     vllm:
-      rule: "Host(`vllm.local`)"
+      rule: "Host(`vllm.192.168.1.222.nip.io`)"
       service: vllm
       entryPoints:
         - websecure
@@ -21,7 +29,7 @@ http:
 
     # Ollama
     ollama:
-      rule: "Host(`ollama.local`)"
+      rule: "Host(`ollama.192.168.1.222.nip.io`)"
       service: ollama
       entryPoints:
         - websecure
@@ -29,7 +37,7 @@ http:
 
     # SearXNG
     searxng:
-      rule: "Host(`search.local`)"
+      rule: "Host(`search.192.168.1.222.nip.io`)"
       service: searxng
       entryPoints:
         - websecure
@@ -37,13 +45,26 @@ http:
 
     # AnythingLLM
     anythingllm:
-      rule: "Host(`rag.local`)"
+      rule: "Host(`rag.192.168.1.222.nip.io`)"
       service: anythingllm
       entryPoints:
         - websecure
       tls: {}
 
+    # Portainer on Unraid
+    portainer:
+      rule: "Host(`portainer.192.168.1.222.nip.io`)"
+      service: portainer
+      entryPoints:
+        - websecure
+      tls: {}
+
   services:
+    jai:
+      loadBalancer:
+        servers:
+          - url: "http://jai-web:80"
+
     openwebui:
       loadBalancer:
         servers:
@@ -69,8 +90,18 @@ http:
         servers:
           - url: "http://192.168.1.9:3001"
 
-# Self-signed certificate for local use
+    portainer:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.1.222:9443"
+        serversTransport: insecure
+
+  serversTransports:
+    insecure:
+      insecureSkipVerify: true
+
+# Self-signed certificate for nip.io domains
 tls:
   certificates:
-    - certFile: /etc/traefik/certs/local.crt
-      keyFile: /etc/traefik/certs/local.key
+    - certFile: /etc/traefik/certs/nip.crt
+      keyFile: /etc/traefik/certs/nip.key
