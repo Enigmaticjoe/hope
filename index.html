@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain AI - Control Center</title>
+    <title>jAI - Control Center</title>
     <style>
         :root {
             --bg-primary: #0f0f1a;
@@ -272,7 +272,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🧠 Brain AI</h1>
+            <h1>🧠 jAI</h1>
             <p class="subtitle">Local AI Control Center | Pop!_OS • AMD RX 7900 XT • 128GB RAM</p>
             
             <div class="status-bar">
@@ -307,7 +307,7 @@
             
             <div class="chat-messages" id="chat-messages">
                 <div class="message assistant">
-                    Hello! I'm your local AI assistant running on Brain AI. How can I help you today?
+                    Hello! I'm your local AI assistant running on jAI. How can I help you today?
                 </div>
             </div>
             
@@ -322,38 +322,38 @@
             <div class="card">
                 <h3>🌐 Open WebUI</h3>
                 <p>Full-featured chat interface with RAG, web search, and multi-model support.</p>
-                <a href="http://localhost:3000" target="_blank" class="btn">Open Chat UI</a>
+                <a href="http://100.108.197.12:3000" target="_blank" class="btn">Open Chat UI</a>
             </div>
-            
+
             <div class="card">
                 <h3>📚 AnythingLLM</h3>
                 <p>Document RAG workspace. Upload files and chat with your data.</p>
-                <a href="http://localhost:3001" target="_blank" class="btn">Open RAG</a>
+                <a href="http://100.108.197.12:3001" target="_blank" class="btn">Open RAG</a>
             </div>
-            
+
             <div class="card">
                 <h3>🔍 SearXNG</h3>
                 <p>Private meta search engine for AI-powered web research.</p>
-                <a href="http://localhost:8888" target="_blank" class="btn">Open Search</a>
+                <a href="http://100.108.197.12:8888" target="_blank" class="btn">Open Search</a>
             </div>
-            
+
             <div class="card">
                 <h3>🐳 Portainer</h3>
                 <p>Docker container management and monitoring dashboard.</p>
-                <a href="https://localhost:9443" target="_blank" class="btn">Open Portainer</a>
+                <a href="https://100.108.197.12:9443" target="_blank" class="btn">Open Portainer</a>
             </div>
-            
+
             <div class="card">
                 <h3>🏠 Home Assistant</h3>
                 <p>Connect to your smart home with voice-enabled AI assistant.</p>
                 <a href="http://homeassistant.local:8123" target="_blank" class="btn">Open HA</a>
             </div>
-            
+
             <div class="card">
                 <h3>📊 API Endpoints</h3>
                 <p>Direct API access for integrations and testing.</p>
-                <a href="http://localhost:8000/docs" target="_blank" class="btn">vLLM API</a>
-                <a href="http://localhost:11434" target="_blank" class="btn btn-secondary" style="margin-left:5px">Ollama</a>
+                <a href="http://100.108.197.12:8000/docs" target="_blank" class="btn">vLLM API</a>
+                <a href="http://100.108.197.12:11434" target="_blank" class="btn btn-secondary" style="margin-left:5px">Ollama</a>
             </div>
         </section>
         
@@ -361,7 +361,21 @@
         <section class="card">
             <h3>🚀 Model Launcher</h3>
             <p>Click a model to load it in vLLM. Only one model runs at a time.</p>
-            
+
+            <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-dim);">Custom vLLM Model:</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" id="vllm-model-input" placeholder="e.g., huihui-ai/Phi-4-abliterated"
+                           style="flex: 1; min-width: 250px; padding: 10px; background: var(--bg-secondary); border: 1px solid var(--accent); border-radius: 6px; color: var(--text);">
+                    <button class="btn" onclick="loadCustomModel()">Load Model</button>
+                    <a href="https://huggingface.co/models?pipeline_tag=text-generation&sort=trending" target="_blank" class="btn btn-secondary">Browse Models</a>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-dim);">
+                    Find models at <a href="https://huggingface.co/models?pipeline_tag=text-generation" target="_blank" style="color: var(--accent);">Hugging Face</a>
+                    or <a href="https://ollama.com/library" target="_blank" style="color: var(--accent);">Ollama Library</a>
+                </p>
+            </div>
+
             <div class="model-grid" id="model-grid">
                 <div class="model-card" onclick="loadModel('cognitivecomputations/dolphin-2.9.3-mistral-nemo-12b')">
                     <h4>🐬 Dolphin 12B</h4>
@@ -407,9 +421,9 @@
             <p>Connect Home Assistant Voice Preview Edition to these endpoints:</p>
             
             <div style="background: var(--bg-primary); padding: 15px; border-radius: 8px; margin-top: 15px; font-family: monospace;">
-                <p><strong>Whisper (STT):</strong> <span id="host-ip">localhost</span>:10300</p>
-                <p><strong>Piper (TTS):</strong> <span id="host-ip2">localhost</span>:10200</p>
-                <p><strong>LLM API:</strong> http://<span id="host-ip3">localhost</span>:8000/v1</p>
+                <p><strong>Whisper (STT):</strong> 100.108.197.12:10300</p>
+                <p><strong>Piper (TTS):</strong> 100.108.197.12:10200</p>
+                <p><strong>LLM API:</strong> http://100.108.197.12:8000/v1</p>
             </div>
             
             <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-dim);">
@@ -418,7 +432,7 @@
         </section>
         
         <footer>
-            <p>Brain AI v2.0 | Local-first AI Infrastructure</p>
+            <p>jAI v2.0 | Local-first AI Infrastructure</p>
             <p style="margin-top: 5px;">vLLM • Ollama • Open WebUI • Wyoming • Home Assistant</p>
             <p style="margin-top: 5px; font-size: 0.85em; color: var(--text-dim);">
                 Ollama (11434) and Open WebUI (3000) run on the host with default ports.
@@ -428,48 +442,53 @@
     
     <script>
         // Configuration
-        const VLLM_URL = 'http://localhost:8000';
-        const OLLAMA_URL = 'http://localhost:11434';
-        const WEBUI_URL = 'http://localhost:3000';
-        const WHISPER_URL = 'http://localhost:10300';
-        
-        // Check service status
+        const TAILSCALE_IP = '100.108.197.12';
+        const VLLM_URL = `http://${TAILSCALE_IP}:8000`;
+        const OLLAMA_URL = `http://${TAILSCALE_IP}:11434`;
+        const WEBUI_URL = `http://${TAILSCALE_IP}:3000`;
+        const WHISPER_URL = `http://${TAILSCALE_IP}:10300`;
+
+        // Check service status with proper error handling
         async function checkStatus(url, elementId) {
             const dot = document.getElementById(elementId);
             dot.className = 'status-dot loading';
-            
+
             try {
-                const response = await fetch(url, { 
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(url, {
                     method: 'GET',
-                    mode: 'no-cors',
-                    cache: 'no-cache'
+                    cache: 'no-cache',
+                    signal: controller.signal
                 });
-                dot.className = 'status-dot online';
-            } catch (e) {
-                // Try with timeout
-                try {
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 2000);
-                    await fetch(url, { signal: controller.signal, mode: 'no-cors' });
-                    clearTimeout(timeout);
+                clearTimeout(timeout);
+
+                // Check if response is actually OK
+                if (response.ok || response.status < 500) {
                     dot.className = 'status-dot online';
-                } catch {
+                } else {
                     dot.className = 'status-dot offline';
                 }
+            } catch (e) {
+                // Network error, CORS error, or timeout = offline
+                dot.className = 'status-dot offline';
             }
         }
-        
+
         // Initialize status checks
         function initStatusChecks() {
             checkStatus(VLLM_URL + '/health', 'vllm-status');
             checkStatus(OLLAMA_URL + '/api/tags', 'ollama-status');
             checkStatus(WEBUI_URL + '/health', 'webui-status');
-            checkStatus('http://localhost:10300', 'whisper-status');
-            
+            checkStatus(WHISPER_URL, 'whisper-status');
+
             // Refresh every 30 seconds
             setInterval(() => {
                 checkStatus(VLLM_URL + '/health', 'vllm-status');
                 checkStatus(OLLAMA_URL + '/api/tags', 'ollama-status');
+                checkStatus(WEBUI_URL + '/health', 'webui-status');
+                checkStatus(WHISPER_URL, 'whisper-status');
             }, 30000);
         }
         
@@ -535,7 +554,7 @@
                 `You'll need to restart vLLM for changes to take effect:\n\n` +
                 `~/brain-ai/vllm-server.sh restart`
             );
-            
+
             if (confirmed) {
                 alert(
                     `To load this model:\n\n` +
@@ -546,6 +565,19 @@
                 );
             }
         }
+
+        // Load custom model from input
+        function loadCustomModel() {
+            const input = document.getElementById('vllm-model-input');
+            const modelId = input.value.trim();
+
+            if (!modelId) {
+                alert('Please enter a model name (e.g., huihui-ai/Phi-4-abliterated)');
+                return;
+            }
+
+            loadModel(modelId);
+        }
         
         // Escape HTML
         function escapeHtml(text) {
@@ -554,19 +586,9 @@
             return div.innerHTML;
         }
         
-        // Get host IP for Wyoming config
-        function updateHostIp() {
-            // Use window location or fallback
-            const host = window.location.hostname || 'localhost';
-            document.querySelectorAll('[id^="host-ip"]').forEach(el => {
-                el.textContent = host === 'localhost' ? '192.168.1.9' : host;
-            });
-        }
-        
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             initStatusChecks();
-            updateHostIp();
         });
     </script>
 </body>
