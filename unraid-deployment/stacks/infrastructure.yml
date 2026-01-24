@@ -64,3 +64,16 @@ services:
       - WATCHTOWER_POLL_INTERVAL=86400
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - AUTOHEAL_CONTAINER_LABEL=all    # monitor all containers with healthchecks
+      - AUTOHEAL_INTERVAL=60            # check every 60 seconds
+      - AUTOHEAL_START_PERIOD=120       # wait 120s before monitoring new containers
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
