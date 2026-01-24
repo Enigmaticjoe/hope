@@ -57,3 +57,26 @@ echo "Deploying home automation stack..."
 docker compose -f home-automation.yml --env-file .env.home-automation up -d
 
 echo "All stacks deployed. Verify via Portainer UI or 'docker ps' that containers are running."
+
+# Optional: Run Chimera media stack auto-configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/chimera-setup.sh" ]; then
+    echo ""
+    echo "============================================"
+    echo "Media Stack Auto-Configuration Available"
+    echo "============================================"
+    echo ""
+    echo "Run the following to auto-configure your media stack:"
+    echo "  $SCRIPT_DIR/chimera-setup.sh --auto"
+    echo ""
+    echo "Or with preview first:"
+    echo "  $SCRIPT_DIR/chimera-setup.sh --auto --dry-run"
+    echo ""
+
+    # If --configure flag was passed, run auto-configuration
+    if [[ "$*" == *"--configure"* ]]; then
+        echo "Auto-configuring media stack (waiting 30s for services to start)..."
+        sleep 30
+        "$SCRIPT_DIR/chimera-setup.sh" --auto
+    fi
+fi

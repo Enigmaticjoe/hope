@@ -53,13 +53,36 @@ docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
 docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
 ```
 
-### 4. Configure Homepage Dashboard
+### 4. Auto-Configure Media Stack (Recommended)
+After deploying the media stack, run the Chimera configurator to automatically wire everything together:
+
+```bash
+# Fully automatic mode - discovers services, extracts API keys, configures integrations
+./scripts/chimera-setup.sh --auto
+
+# Or preview changes first
+./scripts/chimera-setup.sh --auto --dry-run
+
+# Or use interactive mode for step-by-step setup
+./scripts/chimera-setup.sh --interactive
+```
+
+This automatically configures:
+- Rdt-Client → Sonarr/Radarr (download client)
+- Prowlarr → Sonarr/Radarr (indexer sync)
+- Bazarr → Sonarr/Radarr (subtitles)
+- Overseerr → Sonarr/Radarr (requests)
+- Root folders and paths
+
+See [scripts/MEDIA-CONFIGURATOR.md](./scripts/MEDIA-CONFIGURATOR.md) for full documentation.
+
+### 5. Configure Homepage Dashboard
 Copy the dashboard configuration to your Homepage appdata folder:
 ```bash
 cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ```
 
-### 5. Verify GPU Support (for AI stack)
+### 6. Verify GPU Support (for AI stack)
 ```bash
 ./scripts/gpu-check.sh
 ```
@@ -102,9 +125,13 @@ For complete setup instructions, configuration details, and troubleshooting:
 
 ## 🛠 Utility Scripts
 
-- **wipe-and-prep.sh** - Clean slate: removes all containers and prepares directories
-- **auto-deploy.sh** - Automated deployment of all stacks
-- **gpu-check.sh** - Verify NVIDIA GPU support for AI services
+| Script | Purpose |
+|--------|---------|
+| `chimera-setup.sh` | Auto-configure media stack integrations (Sonarr↔Radarr↔Prowlarr↔Rdt-Client) |
+| `media_configurator.py` | Python tool for media stack configuration (used by chimera-setup.sh) |
+| `auto-deploy.sh` | Automated deployment of all stacks |
+| `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
+| `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
 
 ## 🔒 Security Notes
 
@@ -124,11 +151,13 @@ After deployment, access your services at:
 
 ## 📝 Next Steps
 
-1. Configure Plex libraries and claim your server
-2. Set up Sonarr/Radarr indexers via Prowlarr
-3. Install Ollama models: `docker exec ollama ollama pull llama2`
-4. Configure Home Assistant integrations
-5. Set up Uptime Kuma monitors for your services
+1. **Run Chimera Setup**: `./scripts/chimera-setup.sh --auto` (connects all media services)
+2. Configure Plex libraries and claim your server
+3. Add indexers to Prowlarr (will auto-sync to Sonarr/Radarr)
+4. Set up Real-Debrid credentials in Rdt-Client
+5. Install Ollama models: `docker exec ollama ollama pull llama2`
+6. Configure Home Assistant integrations
+7. Set up Uptime Kuma monitors for your services
 
 ## 🤝 Support
 
