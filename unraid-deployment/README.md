@@ -18,6 +18,7 @@ cp env-templates/.env.infrastructure .env.infrastructure
 cp env-templates/.env.media .env.media
 cp env-templates/.env.ai-core .env.ai-core
 cp env-templates/.env.home-automation .env.home-automation
+cp env-templates/.env.agentic .env.agentic
 ```
 
 Edit each `.env.*` file with your specific values (API keys, paths, etc.)
@@ -34,7 +35,7 @@ cd unraid-deployment
 1. Open Portainer web UI (http://your-unraid-ip:9000)
 2. Create a new stack for each YAML file in `stacks/`
 3. Upload the corresponding `.env` file for each stack
-4. Deploy in order: infrastructure → media → ai-core → home-automation
+4. Deploy in order: infrastructure → media → ai-core → home-automation → agentic
 
 #### Option C: Using Docker Compose
 ```bash
@@ -51,6 +52,9 @@ docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
 
 # Deploy home automation stack
 docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
+
+# Deploy agentic stack
+docker compose -f agentic.yml --env-file ../.env.agentic up -d
 ```
 
 ### 4. Auto-Configure Media Stack (Recommended)
@@ -134,11 +138,17 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Zigbee2MQTT** - Zigbee device integration
 - **ESPHome** - ESP device management
 
+### Agentic Stack
+- **n8n** - Orchestration for agentic workflows
+- **Browserless** - Headless Chrome for web automation
+- **Cloudflared** - Cloudflare Tunnel ingress
+
 ## 📚 Documentation
 
 For complete setup instructions, configuration details, and troubleshooting:
 - **[UNRAID-DEPLOYMENT.md](./UNRAID-DEPLOYMENT.md)** - Comprehensive deployment guide
 - **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** - Media stack auto-configuration (User Scripts, Portainer, CLI)
+- **[AGENTIC-BIDDING.md](./AGENTIC-BIDDING.md)** - Agentic bidding workflow + Zero Trust ingress
 
 ## 🛠 Utility Scripts
 
@@ -149,6 +159,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 | `auto-deploy.sh` | Automated deployment of all stacks |
 | `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
 | `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
+| `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
 
 ## 🔒 Security Notes
 
