@@ -1,14 +1,21 @@
 version: "3.8"
 services:
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:rocm
     container_name: ollama
     restart: unless-stopped
-    runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
+      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION}
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL}
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS}
     volumes:
       - ${APPDATA_PATH}/ollama:/root/.ollama
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
     ports:
       - "11434:11434"
 
@@ -22,6 +29,8 @@ services:
       - QDRANT_URI=http://qdrant:6333
       - QDRANT_API_KEY=
       - OLLAMA_BASE_URL=http://ollama:11434
+      - OPENAI_API_BASE_URL=${LOCAL_AI_OPENAI_BASE_URL}
+      - OPENAI_API_KEY=${LOCAL_AI_OPENAI_API_KEY}
     volumes:
       - ${APPDATA_PATH}/openwebui:/app/backend/data
     ports:
@@ -31,13 +40,11 @@ services:
       - qdrant
 
   qdrant:
-    image: qdrant/qdrant:gpu-nvidia-latest
+    image: qdrant/qdrant:latest
     container_name: qdrant
     restart: unless-stopped
-    runtime: nvidia
     environment:
-      - QDRANT__GPU__INDEXING=1
-      - NVIDIA_VISIBLE_DEVICES=all
+      - QDRANT__GPU__INDEXING=0
     volumes:
       - ${APPDATA_PATH}/qdrant/storage:/qdrant/storage
       - ${APPDATA_PATH}/qdrant/snapshots:/qdrant/snapshots

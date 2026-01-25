@@ -5,18 +5,18 @@ Welcome to your smart Unraid deployment! This guide covers the setup of Media Se
 ## 1. Prerequisites
 
 ### Unraid & Hardware
-Your system is a powerhouse, but there is one critical configuration detail regarding your CPU:
-* **CPU:** Intel Core i5-13600KF (Note: The "F" means **no integrated graphics**).
-* **GPU:** NVIDIA GeForce RTX 4070.
-* **RAM:** 96 GB (Excellent for loading large LLMs into memory).
+Your system is a powerhouse, but there is one critical configuration detail regarding your GPU:
+* **CPU:** Intel Core Ultra 7 265F (Note: The "F" means **no integrated graphics**).
+* **GPU:** AMD Radeon RX 7900 XT (RDNA3, 20GB VRAM).
+* **RAM:** 128 GB (Excellent for loading large LLMs into memory).
 * **Storage:**
     * Cache: Samsung 990 EVO Plus (`/mnt/cache`)
     * Vector DB: WD Black SN850X (`/mnt/qdrant`)
 
-**Critical Step:** Since your CPU lacks QuickSync, you **must** use the RTX 4070 for Plex hardware transcoding and AI acceleration. Ensure the **NVIDIA Driver** plugin is installed from Community Apps and the GPU UUID is visible in `nvidia-smi`.
+**Critical Step:** Since your CPU lacks QuickSync, you **must** use the RX 7900 XT for Plex hardware transcoding and AI acceleration. Ensure the **AMD GPU driver** plugin is installed from Community Apps and `/dev/kfd` exists on the host.
 
 ### Accounts/Subscriptions
-- **Plex Pass** (Required for hardware transcoding on NVIDIA).
+- **Plex Pass** (Required for hardware transcoding).
 - **Real-Debrid** (Premium account for Zurg/Riven).
 - **Tailscale** (For secure remote access).
 - **Cloudflare** (For the Agentic stack tunnels).
@@ -39,6 +39,9 @@ The provided `auto-deploy.sh` script handles deployment. Ensure you have filled 
 Deploy this first to establish the backbone and remote access.
 1.  **Tailscale:** Connects your server to your private VPN mesh.
 2.  **Homepage:** Your central dashboard.
+3.  **Unraid API:** Provides programmatic access to My Servers (used by automation + monitoring).
+
+**Required:** Set `UNRAID_API_KEY` in `.env.infrastructure` before deploying.
 
 **Post-Deploy:**
 * Log into Tailscale Admin and approve the `unraid` node.
@@ -51,7 +54,7 @@ Deploy this first to establish the backbone and remote access.
 This sets up your "Netflix-like" streaming experience.
 
 **Configuration Notes:**
-* **Plex Transcoding:** In your `.env.media` or Docker Compose, ensure `NVIDIA_VISIBLE_DEVICES=all` is set for Plex. Inside Plex Settings > Transcoder, set "Hardware transcoding device" to the **RTX 4070**.
+* **Plex Transcoding:** Ensure `/dev/dri` is present and that Plex is set to use hardware transcoding. Inside Plex Settings > Transcoder, enable "Use hardware acceleration when available."
 * **Real-Debrid (Zurg):** This service mounts your Real-Debrid torrents to `/mnt/user/realdebrid`. Ensure your `RD_API_KEY` is correct in `.env.media`.
 * **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the Zurg mount or your local `downloads` share on the cache.
 
@@ -62,7 +65,7 @@ This sets up your "Netflix-like" streaming experience.
 ### c. AI Core Stack (Ollama + Open WebUI + Qdrant)
 **File:** `stacks/ai-core.yml`
 
-This enables your local "Sovereign AI" using the RTX 4070.
+This enables your local "Sovereign AI" using the RX 7900 XT.
 
 **Storage Optimization:**
 You have a dedicated NVMe partition mounted at `/mnt/qdrant` on your WD Black SN850X. This is perfect for high-speed vector retrieval.
@@ -73,7 +76,7 @@ You have a dedicated NVMe partition mounted at `/mnt/qdrant` on your WD Black SN
     ```
 
 **Services:**
-* **Ollama (Brain):** Running on port `11434`. It will offload layers to the RTX 4070 VRAM (12GB). With 96GB system RAM, you can also run massive models (70B parameters) using CPU offloading if needed.
+* **Ollama (Brain):** Running on port `11434`. It will offload layers to the RX 7900 XT VRAM (20GB). For RDNA3, you must set `HSA_OVERRIDE_GFX_VERSION=11.0.0` (already in `.env.ai-core`).
 * **Open WebUI (Chat):** `http://192.168.1.222:3000`. Connects to Ollama and Qdrant for RAG (chatting with your docs).
 
 ### d. Agentic Stack (n8n + Browserless + Cloudflare)
@@ -100,7 +103,7 @@ This stack powers your automated bidding and web scraping workflows.
 ## 3. Post-Deployment Checklist
 
 1.  **Check GPU Usage:**
-    Run `watch nvidia-smi` in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
+    Run `rocm-smi` (or `rocminfo`) in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
 2.  **Backups:**
     Your AppData is on `/mnt/cache` (Samsung 990 EVO). Ensure the **Appdata Backup** plugin is installed and scheduled to back up to the Array (HDD) weekly.
 3.  **Security:**

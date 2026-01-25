@@ -6,8 +6,8 @@ Complete, modular deployment files for a fully-featured Unraid smart home server
 
 ### 1. Prerequisites
 - Unraid server with Docker support
-- NVIDIA GPU drivers installed (for AI features)
-- Accounts: Plex Pass, Real-Debrid, Tailscale
+- AMD GPU driver plugin installed (for ROCm AI acceleration)
+- Accounts: Plex Pass, Real-Debrid, Tailscale (and Unraid API key for My Servers)
 
 ### 2. Setup Environment Files
 Copy and customize the environment templates:
@@ -21,7 +21,7 @@ cp env-templates/.env.home-automation .env.home-automation
 cp env-templates/.env.agentic .env.agentic
 ```
 
-Edit each `.env.*` file with your specific values (API keys, paths, etc.)
+Edit each `.env.*` file with your specific values (API keys, paths, etc.). For the Unraid API, set `UNRAID_API_KEY` in `.env.infrastructure`.
 
 ### 3. Deploy the Stacks
 
@@ -112,6 +112,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ### Infrastructure Stack
 - **Tailscale** - Secure VPN access to your network
 - **Homepage** - Unified dashboard for all services
+- **Unraid API** - Programmatic access to Unraid My Servers API
 - **Uptime Kuma** - Service monitoring
 - **Dozzle** - Real-time log viewer
 - **Watchtower** - Automatic container updates
@@ -127,7 +128,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Zurg** - Real-Debrid integration
 
 ### AI Core Stack
-- **Ollama** - Local LLM inference engine
+- **Ollama (ROCm)** - Local LLM inference engine (AMD 7900 XT)
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
 
@@ -158,7 +159,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 | `media_configurator.py` | Python tool for media stack configuration (used by chimera-setup.sh) |
 | `auto-deploy.sh` | Automated deployment of all stacks |
 | `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
-| `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
+| `gpu-check.sh` | Verify AMD ROCm GPU support for AI services |
 | `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
 
 ## 🔒 Security Notes
