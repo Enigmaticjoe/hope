@@ -1,0 +1,211 @@
+#!/bin/bash
+#name=Chimera Media Stack Configurator
+#description=Auto-configure Sonarr, Radarr, Prowlarr, Rdt-Client, Bazarr, and Overseerr integrations
+#argumentsok=true
+#arrayStarted=true
+
+# =============================================================================
+# Chimera Media Stack Configurator - Unraid User Scripts Edition
+# =============================================================================
+# This script auto-discovers and configures your media stack services.
+#
+# Run modes (pass as argument):
+#   --auto        Fully automatic (discover, extract keys, configure)
+#   --status      Check current integration status
+#   --discover    Just discover services without configuring
+#   --dry-run     Preview changes without applying
+#   --interactive Step-by-step guided setup
+#
+# Example: Run with --auto argument for fully automatic setup
+# =============================================================================
+
+set -e
+
+# Configuration
+SCRIPT_DIR="/boot/config/plugins/chimera"
+PYTHON_SCRIPT="$SCRIPT_DIR/media_configurator.py"
+CONFIG_FILE="$SCRIPT_DIR/media_stack_config.json"
+LOG_FILE="/tmp/chimera-configurator.log"
+APPDATA_PATH="/mnt/user/appdata"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+log() {
+    echo -e "$1" | tee -a "$LOG_FILE"
+}
+
+print_banner() {
+    log "${CYAN}"
+    log "╔══════════════════════════════════════════════════════════════╗"
+    log "║                                                              ║"
+    log "║     ██████╗██╗  ██╗██╗███╗   ███╗███████╗██████╗  █████╗    ║"
+    log "║    ██╔════╝██║  ██║██║████╗ ████║██╔════╝██╔══██╗██╔══██╗   ║"
+    log "║    ██║     ███████║██║██╔████╔██║█████╗  ██████╔╝███████║   ║"
+    log "║    ██║     ██╔══██║██║██║╚██╔╝██║██╔══╝  ██╔══██╗██╔══██║   ║"
+    log "║    ╚██████╗██║  ██║██║██║ ╚═╝ ██║███████╗██║  ██║██║  ██║   ║"
+    log "║     ╚═════╝╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝   ║"
+    log "║                                                              ║"
+    log "║              Media Stack Auto-Configuration                  ║"
+    log "║                   Unraid 7.x Edition                         ║"
+    log "║                                                              ║"
+    log "╚══════════════════════════════════════════════════════════════╝"
+    log "${NC}"
+}
+
+check_requirements() {
+    log "${CYAN}[CHECK]${NC} Verifying requirements..."
+
+    # Check for Python 3
+    if ! command -v python3 &> /dev/null; then
+        log "${RED}[ERROR]${NC} Python 3 is required but not installed."
+        log "       Unraid 7.x should include Python 3. Please check your installation."
+        exit 1
+    fi
+    log "${GREEN}[OK]${NC} Python 3 found: $(python3 --version)"
+
+    # Check for Docker
+    if ! command -v docker &> /dev/null; then
+        log "${YELLOW}[WARN]${NC} Docker not found. Container discovery will be limited."
+    else
+        log "${GREEN}[OK]${NC} Docker found"
+    fi
+
+    # Check if appdata path exists
+    if [[ ! -d "$APPDATA_PATH" ]]; then
+        log "${YELLOW}[WARN]${NC} Appdata path $APPDATA_PATH not found."
+        log "       API key extraction may not work."
+    else
+        log "${GREEN}[OK]${NC} Appdata path found: $APPDATA_PATH"
+    fi
+}
+
+ensure_script_exists() {
+    # Create script directory
+    mkdir -p "$SCRIPT_DIR"
+
+    # Check if Python script exists
+    if [[ ! -f "$PYTHON_SCRIPT" ]]; then
+        log "${CYAN}[SETUP]${NC} Downloading media_configurator.py..."
+
+        # Try to copy from deployment directory first
+        DEPLOY_SCRIPT="/boot/config/plugins/user.scripts/scripts/chimera-configurator/media_configurator.py"
+        if [[ -f "$DEPLOY_SCRIPT" ]]; then
+            cp "$DEPLOY_SCRIPT" "$PYTHON_SCRIPT"
+            log "${GREEN}[OK]${NC} Copied from deployment directory"
+        else
+            log "${RED}[ERROR]${NC} media_configurator.py not found!"
+            log "       Please copy media_configurator.py to: $SCRIPT_DIR/"
+            exit 1
+        fi
+    fi
+
+    chmod +x "$PYTHON_SCRIPT"
+}
+
+show_menu() {
+    log ""
+    log "${BOLD}Select an option:${NC}"
+    log ""
+    log "  1) ${GREEN}Auto Configure${NC}     - Discover services, extract keys, configure everything"
+    log "  2) ${CYAN}Check Status${NC}       - View current integration status"
+    log "  3) ${CYAN}Discover Services${NC}  - Scan for running media containers"
+    log "  4) ${YELLOW}Dry Run${NC}            - Preview changes without applying"
+    log "  5) ${CYAN}Interactive Setup${NC}  - Step-by-step guided configuration"
+    log "  6) ${CYAN}Extract API Keys${NC}   - Extract keys from config files"
+    log "  7) ${RED}Reset Config${NC}       - Clear saved configuration"
+    log "  8) Exit"
+    log ""
+    read -p "Enter choice [1-8]: " choice
+
+    case $choice in
+        1) run_configurator "configure" "--auto" ;;
+        2) run_configurator "status" ;;
+        3) run_configurator "discover" ;;
+        4) run_configurator "configure" "--auto" "--dry-run" ;;
+        5) run_configurator "configure" "--interactive" ;;
+        6) run_configurator "extract-keys" "--appdata" "$APPDATA_PATH" ;;
+        7) run_configurator "reset" "--force" ;;
+        8) exit 0 ;;
+        *) log "${RED}Invalid choice${NC}"; show_menu ;;
+    esac
+}
+
+run_configurator() {
+    log ""
+    log "${CYAN}[RUN]${NC} Executing: python3 $PYTHON_SCRIPT $*"
+    log ""
+
+    python3 "$PYTHON_SCRIPT" "$@" 2>&1 | tee -a "$LOG_FILE"
+
+    log ""
+    log "${GREEN}[DONE]${NC} Configurator finished."
+    log "       Log saved to: $LOG_FILE"
+}
+
+main() {
+    # Clear log
+    > "$LOG_FILE"
+
+    print_banner
+    check_requirements
+    ensure_script_exists
+
+    # Parse arguments
+    case "${1:-}" in
+        --auto|-a)
+            shift
+            run_configurator "configure" "--auto" "$@"
+            ;;
+        --status|-s)
+            run_configurator "status"
+            ;;
+        --discover|-d)
+            run_configurator "discover"
+            ;;
+        --dry-run)
+            shift
+            run_configurator "configure" "--auto" "--dry-run" "$@"
+            ;;
+        --interactive|-i)
+            shift
+            run_configurator "configure" "--interactive" "$@"
+            ;;
+        --extract-keys)
+            run_configurator "extract-keys" "--appdata" "$APPDATA_PATH"
+            ;;
+        --reset)
+            run_configurator "reset" "--force"
+            ;;
+        --help|-h)
+            log ""
+            log "Usage: $0 [OPTIONS]"
+            log ""
+            log "Options:"
+            log "  --auto, -a        Fully automatic configuration"
+            log "  --status, -s      Show current status"
+            log "  --discover, -d    Discover services"
+            log "  --dry-run         Preview changes"
+            log "  --interactive, -i Guided setup"
+            log "  --extract-keys    Extract API keys"
+            log "  --reset           Clear configuration"
+            log "  --help, -h        Show this help"
+            log ""
+            ;;
+        "")
+            # No arguments - show menu
+            show_menu
+            ;;
+        *)
+            # Pass through to Python script
+            run_configurator "$@"
+            ;;
+    esac
+}
+
+main "$@"

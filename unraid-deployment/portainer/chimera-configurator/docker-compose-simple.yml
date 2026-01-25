@@ -1,0 +1,42 @@
+# Chimera Configurator - Simple Stack (No Build Required)
+#
+# This version mounts the script directly - no image build needed.
+# Just copy media_configurator.py to /boot/config/plugins/chimera/ first.
+#
+# Deploy in Portainer as a stack to run the configurator.
+
+version: "3.8"
+
+services:
+  chimera-configurator:
+    image: python:3.11-alpine
+    container_name: chimera-configurator
+
+    # Install deps and run configurator
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache bash curl docker-cli > /dev/null 2>&1
+        echo "============================================"
+        echo "  Chimera Media Stack Configurator"
+        echo "============================================"
+        echo ""
+        python3 /app/media_configurator.py configure --auto --appdata /appdata
+        echo ""
+        echo "Configuration complete! Check logs above for details."
+
+    volumes:
+      # Mount Docker socket for container discovery
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Mount appdata for API key extraction
+      - /mnt/user/appdata:/appdata:ro
+      # Mount the configurator script
+      - /boot/config/plugins/chimera/media_configurator.py:/app/media_configurator.py:ro
+      # Persist configuration
+      - /boot/config/plugins/chimera:/config
+
+    network_mode: host
+    restart: "no"
+
+    environment:
+      - TZ=${TZ:-America/Los_Angeles}

@@ -1,0 +1,49 @@
+# Chimera Media Stack Configurator - Portainer Stack
+#
+# Deploy this stack to auto-configure your media services.
+# The container will run once, configure everything, then exit.
+#
+# Usage:
+#   1. Deploy this stack in Portainer
+#   2. Container runs automatically and configures integrations
+#   3. Check container logs for results
+#   4. Container exits when done (normal behavior)
+#
+# To run again: Restart the container or redeploy the stack
+
+version: "3.8"
+
+services:
+  chimera-configurator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chimera-configurator:latest
+    container_name: chimera-configurator
+
+    # Run mode: --auto, --status, --discover, --dry-run
+    command: ["--auto"]
+
+    # Mount Docker socket for container discovery
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Mount appdata for API key extraction
+      - /mnt/user/appdata:/appdata:ro
+      # Persist configuration
+      - /boot/config/plugins/chimera:/config
+
+    # Use host network for direct service access
+    network_mode: host
+
+    # Container runs once and exits
+    restart: "no"
+
+    environment:
+      - TZ=${TZ:-America/Los_Angeles}
+      - APPDATA_PATH=/appdata
+      - CONFIG_PATH=/config
+
+    labels:
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/Prowlarr/Prowlarr/develop/Logo/128.png"
+      - "net.unraid.docker.webui="
+      - "net.unraid.docker.managed=composeman"
