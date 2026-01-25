@@ -1,0 +1,22 @@
+# Cloudflared ingress template (local config mode)
+# Usage:
+# 1) Create tunnel and credentials via Cloudflare Zero Trust.
+# 2) Store credentials JSON at /mnt/user/appdata/cloudflared/<tunnel-id>.json
+# 3) Update the hostname and service targets below.
+# 4) Run cloudflared with: cloudflared tunnel run --config /etc/cloudflared/config.yml <tunnel-name>
+
+tunnel: <tunnel-id>
+credentials-file: /etc/cloudflared/<tunnel-id>.json
+
+ingress:
+  - hostname: n8n.example.com
+    service: http://n8n:5678
+  - hostname: browserless.example.com
+    service: http://browserless:3000
+  - hostname: plex.example.com
+    service: http://plex:32400
+  - hostname: homeassistant.example.com
+    service: http://homeassistant:8123
+  - hostname: openwebui.example.com
+    service: http://openwebui:8080
+  - service: http_status:404

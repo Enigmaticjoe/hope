@@ -3,13 +3,17 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+STACKS_DIR="${ROOT_DIR}/stacks"
+
 # Load environment variables from .env files
 set -a
-[ -f .env.infrastructure ] && source .env.infrastructure
-[ -f .env.media ] && source .env.media
-[ -f .env.ai-core ] && source .env.ai-core
-[ -f .env.home-automation ] && source .env.home-automation
-[ -f .env.agentic ] && source .env.agentic
+[ -f "${ROOT_DIR}/.env.infrastructure" ] && source "${ROOT_DIR}/.env.infrastructure"
+[ -f "${ROOT_DIR}/.env.media" ] && source "${ROOT_DIR}/.env.media"
+[ -f "${ROOT_DIR}/.env.ai-core" ] && source "${ROOT_DIR}/.env.ai-core"
+[ -f "${ROOT_DIR}/.env.home-automation" ] && source "${ROOT_DIR}/.env.home-automation"
+[ -f "${ROOT_DIR}/.env.agentic" ] && source "${ROOT_DIR}/.env.agentic"
 set +a
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -92,11 +96,11 @@ if [[ "$SKIP_PREFLIGHT" -eq 0 ]]; then
 fi
 
 # (Optional) If secrets are stored in a secure location, copy them into .env files
-if [ -d ./secrets ]; then
+if [ -d "${ROOT_DIR}/secrets" ]; then
   for envfile in .env.infrastructure .env.media .env.ai-core .env.home-automation .env.agentic; do
-    if [ -f ./secrets/$envfile ]; then
+    if [ -f "${ROOT_DIR}/secrets/${envfile}" ]; then
       echo "Copying secret file for $envfile"
-      cp ./secrets/$envfile $envfile
+      cp "${ROOT_DIR}/secrets/${envfile}" "${ROOT_DIR}/${envfile}"
     fi
   done
 fi
@@ -120,52 +124,27 @@ MOSQ
     mosquitto_passwd -c -b /mosquitto/config/passwordfile "$MQTT_USER" "$MQTT_PASSWORD"
 fi
 
-compose_run() {
-  local stack_file=$1
-  local env_file=$2
-  local compose_profiles=$3
-  shift 3
-  if [[ "$DRY_RUN" -eq 1 ]]; then
-    if [[ -n "$compose_profiles" ]]; then
-      echo "COMPOSE_PROFILES=${compose_profiles} docker compose -f ${stack_file} --env-file ${env_file} $*"
-    else
-      echo "docker compose -f ${stack_file} --env-file ${env_file} $*"
-    fi
-  else
-    if [[ -n "$compose_profiles" ]]; then
-      COMPOSE_PROFILES="${compose_profiles}" docker compose -f "${stack_file}" --env-file "${env_file}" "$@"
-    else
-      docker compose -f "${stack_file}" --env-file "${env_file}" "$@"
-    fi
-  fi
-}
+echo "Pulling latest Docker images for all stacks..."
+docker compose -f "${STACKS_DIR}/infrastructure.yml" --env-file "${ROOT_DIR}/.env.infrastructure" pull
+docker compose -f "${STACKS_DIR}/media.yml" --env-file "${ROOT_DIR}/.env.media" pull
+docker compose -f "${STACKS_DIR}/ai-core.yml" --env-file "${ROOT_DIR}/.env.ai-core" pull
+docker compose -f "${STACKS_DIR}/home-automation.yml" --env-file "${ROOT_DIR}/.env.home-automation" pull
+docker compose -f "${STACKS_DIR}/agentic.yml" --env-file "${ROOT_DIR}/.env.agentic" pull
 
-for stack in "${STACKS[@]}"; do
-  stack_file="${stack}.yml"
-  env_file=".env.${stack}"
-  if [[ ! -f "$stack_file" ]]; then
-    echo "Missing stack file: ${stack_file}" >&2
-    exit 1
-  fi
-  if [[ ! -f "$env_file" ]]; then
-    echo "Missing env file: ${env_file}" >&2
-    exit 1
-  fi
+echo "Deploying infrastructure stack..."
+docker compose -f "${STACKS_DIR}/infrastructure.yml" --env-file "${ROOT_DIR}/.env.infrastructure" up -d
 
-  compose_profiles=""
-  if [[ "$stack" == "ai-core" ]]; then
-    compose_profiles="${PROFILE:-${COMPOSE_PROFILES:-cpu}}"
-  fi
+echo "Deploying media stack..."
+docker compose -f "${STACKS_DIR}/media.yml" --env-file "${ROOT_DIR}/.env.media" up -d
 
-  if [[ "$SKIP_PULL" -eq 0 ]]; then
-    echo "Pulling latest Docker images for ${stack}..."
-    compose_run "$stack_file" "$env_file" "$compose_profiles" pull
-  fi
+echo "Deploying AI core stack..."
+docker compose -f "${STACKS_DIR}/ai-core.yml" --env-file "${ROOT_DIR}/.env.ai-core" up -d
 
-  echo "Deploying ${stack} stack..."
-  compose_run "$stack_file" "$env_file" "$compose_profiles" up -d
+echo "Deploying home automation stack..."
+docker compose -f "${STACKS_DIR}/home-automation.yml" --env-file "${ROOT_DIR}/.env.home-automation" up -d
 
-done
+echo "Deploying agentic stack..."
+docker compose -f "${STACKS_DIR}/agentic.yml" --env-file "${ROOT_DIR}/.env.agentic" up -d
 
 echo "All requested stacks deployed. Verify via Portainer UI or 'docker ps' that containers are running."
 

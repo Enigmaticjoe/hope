@@ -30,6 +30,26 @@ Edit each `.env.*` file with your specific values (API keys, paths, etc.)
 
 ### 4. Deploy the Stacks
 
+#### Recommended: Chimera Install Orchestrator
+The fastest, most automated path. This will:
+- Copy missing `.env` templates
+- Validate prerequisites, ports, and docker access
+- Create appdata directories
+- Deploy all stacks
+- Run media auto-configuration
+- Bootstrap the agentic network
+
+```bash
+cd unraid-deployment
+./scripts/chimera-install.sh --all
+```
+
+Target a single stack or run dry runs:
+```bash
+./scripts/chimera-install.sh --prepare --validate --deploy --stack media
+./scripts/chimera-install.sh --dry-run --all
+```
+
 #### Option A: Using the Auto-Deploy Script
 ```bash
 cd unraid-deployment
@@ -150,6 +170,8 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
 
+**AMD ROCm option:** Use `stacks/ai-core-amd.yml` with `/dev/kfd` + `/dev/dri` passthrough and `HSA_OVERRIDE_GFX_VERSION` configured in `.env.ai-core`.
+
 ### Home Automation Stack
 - **Home Assistant** - Home automation hub
 - **Mosquitto** - MQTT broker
@@ -181,6 +203,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 | `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories (requires --force) |
 | `gpu-check.sh` | Verify NVIDIA/AMD GPU support for AI services |
 | `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
+| `chimera-install.sh` | End-to-end installer (prepare → validate → deploy → configure) |
 
 ## 🔒 Security Notes
 
