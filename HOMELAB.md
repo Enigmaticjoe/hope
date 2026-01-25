@@ -1,97 +1,158 @@
 # Project Chimera - Homelab Infrastructure
 
-## System Overview
+## "The Jules Protocol" - System v1.4.0
 
-A **federated, privacy-first homelab** running local AI, media automation, and home automation across multiple nodes. All processing happens locally - no cloud dependencies.
+A **Sovereign Intelligence Ecosystem** designed to eliminate reliance on Big Tech. It operates as a localized "Digital Organism" where specialized nodes handle distinct cognitive and physical tasks.
+
+**Architecture**: Distributed Hybrid Mesh (6-Node Topology)
+**Persona**: Jules Winnfield (Sovereign Home Intelligence)
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PROJECT CHIMERA TOPOLOGY                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
-│   │  UNRAID SERVER  │    │  PROXMOX NODE   │    │  PROXMOX NODE   │        │
-│   │  192.168.1.222  │◄──►│  192.168.1.114  │◄──►│  192.168.1.124  │        │
-│   │                 │    │                 │    │                 │        │
-│   │  Unraid 7.2.2   │    │  Proxmox VE     │    │  Proxmox VE     │        │
-│   │  Media + AI     │    │  (VMs/LXC)      │    │  (VMs/LXC)      │        │
-│   │                 │    │                 │    │                 │        │
-│   │  22 Containers  │    │                 │    │                 │        │
-│   └─────────────────┘    └─────────────────┘    └─────────────────┘        │
-│           │                                                                 │
-│           │                                                                 │
-│           ▼                                                                 │
-│   ┌─────────────────┐                                                       │
-│   │  HOME ASSISTANT │                                                       │
-│   │  192.168.1.149  │                                                       │
-│   │   (Bare Metal)  │                                                       │
-│   │  Voice Control  │                                                       │
-│   └─────────────────┘                                                       │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│                            PROJECT CHIMERA - 6 NODE TOPOLOGY                              │
+├──────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│   ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐                     │
+│   │   THE BRAIN     │    │   THE BRAWN     │    │  THE SENTINEL   │                     │
+│   │    (Node A)     │◄──►│    (Node B)     │◄──►│    (Node C)     │                     │
+│   │                 │    │                 │    │                 │                     │
+│   │  Pop!_OS 24.04  │    │  Unraid 7.x     │    │  Proxmox VE     │                     │
+│   │  RX 7900 XT     │    │  RTX 4070       │    │  Dual Coral TPU │                     │
+│   │  AI Inference   │    │  Media/Storage  │    │  NVR/Detection  │                     │
+│   └────────┬────────┘    └────────┬────────┘    └─────────────────┘                     │
+│            │                      │                                                      │
+│            │    10GbE Fiber       │                                                      │
+│            └──────────┬───────────┘                                                      │
+│                       │                                                                  │
+│                       ▼                                                                  │
+│            ┌─────────────────┐         ┌─────────────────┐                              │
+│            │ THE WORKSTATION │         │    THE EDGE     │                              │
+│            │    (Node F)     │◄───────►│    (Node D)     │                              │
+│            │                 │         │                 │                              │
+│            │  Win11/Linux    │         │ Home Assistant  │                              │
+│            │  Command Deck   │         │  (Bare Metal)   │                              │
+│            └─────────────────┘         └────────┬────────┘                              │
+│                                                 │                                        │
+│                                                 ▼                                        │
+│                                      ┌─────────────────┐                                │
+│                                      │   THE SWARM     │                                │
+│                                      │    (Node E)     │                                │
+│                                      │                 │                                │
+│                                      │  ESP32 + Pi     │                                │
+│                                      │  Sensors/DNS    │                                │
+│                                      └─────────────────┘                                │
+│                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Node Details
+## The Six Pillars (Hardware Infrastructure)
 
-### Node 1: Unraid Server (Primary Hub)
+### Node A: "The Brain" (Cognition Core)
 
-**Primary Role**: Media serving, AI inference, storage, container hosting
+**Role**: Pure AI Inference & Logic
 
 | Component | Specification |
 |-----------|---------------|
-| **IP Address** | 192.168.1.222 |
-| **OS** | Unraid 7.2.2 |
-| **Containers** | 22 running |
-| **Uptime** | 7 days |
+| **OS** | Pop!_OS 24.04 (Linux) |
+| **CPU** | Intel Core Ultra 7 265F (20 Cores) |
+| **GPU** | AMD Radeon RX 7900 XT (20GB VRAM) |
+| **RAM** | 128GB DDR5 |
+| **Function** | Bare Metal vLLM inference |
 
-**Docker Stacks (Currently Running):**
+**Services Running:**
+| Service | Port | Type | Purpose |
+|---------|------|------|---------|
+| vLLM | 8000 | Bare Metal | Sovereign LLM inference (Dolphin-Mistral) |
+| Whisper | 10300 | Docker | Speech-to-text (Wyoming) |
+| Piper | 10200 | Docker | Text-to-speech (Wyoming) |
+| AnythingLLM | 3001 | Docker | RAG - "Chat with Data" |
+| Qdrant | 6333 | Docker | Vector database |
+| Open WebUI | 3000 | Bare Metal | Chat interface |
+
+**AI Models Loaded:**
+- Dolphin-Mistral (primary - uncensored, tool-capable)
+- Phi-4-abliterated (fast, uncensored)
+- nomic-embed-text (embeddings)
+
+---
+
+### Node B: "The Brawn" (Infinite Vault)
+
+**Role**: Storage, Media Transcoding, & Legacy Automation
+
+| Component | Specification |
+|-----------|---------------|
+| **OS** | Unraid 7.x |
+| **CPU** | Intel Core i5-13600K (14 Cores) |
+| **GPU** | NVIDIA GeForce RTX 4070 (12GB VRAM) |
+| **Storage** | 22TB+ Array + 3TB NVMe Cache |
+| **Function** | NVENC Transcoding, Media serving |
+
+**Docker Stacks:**
 
 #### Infrastructure Stack
-| Service | Port | Status | Purpose |
-|---------|------|--------|---------|
-| Tailscale | host | Running | VPN access |
-| Homepage | 8010 | Healthy | Dashboard |
-| Uptime Kuma | 3010 | Healthy | Monitoring |
-| Dozzle | 9999 | Running | Log viewer |
-| Watchtower | - | Healthy | Auto-updates |
-| Portainer-BE | 9000 | Running | Container management |
-| Traefik | 8001/44301 | Running | Reverse proxy |
+| Service | Port | Purpose |
+|---------|------|---------|
+| Tailscale | - | VPN access |
+| Homepage | 8010 | Dashboard |
+| Uptime Kuma | 3010 | Monitoring |
+| Dozzle | 9999 | Log viewer |
+| Watchtower | - | Auto-updates |
+| Portainer | 9000 | Container management |
 
 #### Media Stack
-| Service | Port | Status | Purpose |
-|---------|------|--------|---------|
-| Plex | 32400 | Running | Media server |
-| Sonarr | 8989 | Running | TV management |
-| Radarr | 7878 | Running | Movie management |
-| Prowlarr | 9696 | Running | Indexer management |
-| Bazarr | 6767 | Running | Subtitles |
-| Overseerr | 5055 | Running | Media requests |
-| Tautulli | 8181 | Running | Plex analytics |
-| Stremio | 8089 | Running | Streaming |
+| Service | Port | Purpose |
+|---------|------|---------|
+| Plex | 32400 | Media server (NVENC) |
+| Sonarr | 8989 | TV management |
+| Radarr | 7878 | Movie management |
+| Prowlarr | 9696 | Indexer management |
+| Bazarr | 6767 | Subtitles |
+| Overseerr | 5055 | Media requests |
+| Tautulli | 8181 | Plex analytics |
+| Rdt-Client | 6500 | Real-Debrid client |
+| Zurg | 9090 | Real-Debrid mount |
+| Tunarr | - | Linear TV channels |
 
-#### AI Stack
-| Service | Port | Status | Purpose |
-|---------|------|--------|---------|
-| Ollama | 11434 | Running | LLM inference |
-| Open WebUI | 3000 | Healthy | Chat interface |
-| Qdrant | 6333 | Running | Vector database |
-| Faster-Whisper | 10300 | Running | Speech-to-text (Wyoming) |
-| Piper | 10200 | Running | Text-to-speech (Wyoming) |
-| WhisperLive-GPU | 9091 | Running | Real-time transcription |
+#### AI Stack (Backup)
+| Service | Port | Purpose |
+|---------|------|---------|
+| Ollama | 11434 | Backup LLM inference |
+| Open WebUI | 3000 | Chat interface |
 
 ---
 
-### Node 2: Home Assistant (Bare Metal)
+### Node C: "The Sentinel" (Visual Cortex)
 
-**Primary Role**: Home automation hub, voice assistant, IoT coordinator
+**Role**: Dedicated NVR & Object Detection
 
 | Component | Specification |
 |-----------|---------------|
+| **Hardware** | Shuttle DH670 |
+| **Platform** | Proxmox VE (Windows 10 VM + Linux LXC) |
+| **Accelerator** | Dual Google Coral Edge TPUs |
+| **Function** | 24/7 surveillance & AI detection |
+
+**Services Running:**
+| Service | Platform | Purpose |
+|---------|----------|---------|
+| Blue Iris | Windows VM | Forensics: 24/7 continuous recording |
+| Frigate | Linux LXC | AI Sentry: Person/Cat/Car detection (<100ms) |
+
+---
+
+### Node D: "The Edge" (Autonomic Nervous System)
+
+**Role**: IoT State Machine & Physical Interface
+
+| Component | Specification |
+|-----------|---------------|
+| **Hardware** | HP EliteDesk Mini |
+| **Platform** | Home Assistant (Bare Metal) |
 | **IP Address** | 192.168.1.149 |
-| **OS** | Home Assistant OS (bare metal) |
-| **Hardware** | Dedicated appliance |
+| **Function** | Controls lights, locks, sensors |
 
 **Services Running:**
 | Service | Port | Purpose |
@@ -100,32 +161,51 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 | Voice Assistant | - | Wyoming integration |
 
 **Integrations:**
-- Wyoming Protocol (connects to Whisper/Piper on Unraid)
-- OpenAI-compatible API (connects to Ollama on Unraid)
+- Wyoming Protocol (connects to Whisper/Piper on Brain)
+- OpenAI-compatible API (connects to vLLM on Brain)
 - Zigbee/Z-Wave devices
 - ESPHome devices
+- MQTT (Mosquitto on Brawn)
 
 ---
 
-### Node 3: Proxmox Virtualization Cluster
+### Node E: "The Swarm" (Sensory Mesh)
 
-**Primary Role**: Virtual machines, LXC containers, additional compute
+**Role**: Distributed Input/Output & Network Defense
 
-| Node | IP Address | Status |
-|------|------------|--------|
-| Proxmox Node 1 | 192.168.1.114 | Online |
-| Proxmox Node 2 | 192.168.1.124 | Online |
-| Tailscale Node | 192.168.1.11 | Online |
+| Component | Purpose |
+|-----------|---------|
+| **ESP32-S3 Nano Satellites (x3)** | Room-scale voice command injection |
+| **Raspberry Pi Cluster (x2)** | Pi-hole DNS + Failover |
 
 **Capabilities:**
-- VM hosting for isolated workloads
-- LXC containers for lightweight services
-- Cluster high-availability
-- Backup and snapshot management
+- Telepathy: Room-scale voice commands ("Jules, secure the house")
+- Digital Shield: Network-wide ad/telemetry blocking
+- Distributed failover for critical DNS services
 
 ---
 
-## Network Architecture
+### Node F: "The Workstation" (Command Deck)
+
+**Role**: Development, Administration, & Visualization
+
+| Component | Specification |
+|-----------|---------------|
+| **Hardware** | High-Performance Desktop (Custom Build) |
+| **OS** | Windows 11 / Linux Dual Boot |
+| **Displays** | Multi-Monitor Array (Command Center) |
+
+**Functions:**
+| Role | Purpose |
+|------|---------|
+| **The IDE** | VS Code Remote connected to "The Brain" for coding agents |
+| **The Bridge** | Runs the "Chimera Dashboard" (Homepage) to monitor all nodes |
+| **The Terminal** | Primary SSH gateway to Brain, Brawn, and Sentinel |
+| **Gaming/Rendering** | High-fidelity local processing |
+
+---
+
+## Network Architecture (VLAN Segmented)
 
 ```
 Internet
@@ -135,48 +215,35 @@ Internet
 │   Router    │  192.168.1.1
 └─────────────┘
     │
-    ├──────────────────────────────────────────────────────┐
-    │                                                      │
-    ▼                                                      ▼
-┌─────────────┐                                    ┌─────────────┐
-│  Tailscale  │◄──────── Mesh VPN ────────────────►│  Tailscale  │
-│  (Unraid)   │                                    │  (mobile)   │
-└─────────────┘                                    └─────────────┘
+    ├────────────────────────────────────────────────────────────────┐
+    │                                                                │
+    ▼                                                                ▼
+┌─────────────────────────────────────────┐              ┌─────────────────┐
+│           VLAN 10 (TRUSTED)             │              │    Tailscale    │
+│         10GbE Fiber Backbone            │              │   Mesh VPN      │
+│                                         │              │   (Remote)      │
+│  Brain ◄──► Brawn ◄──► Workstation     │              └─────────────────┘
+│              │                          │
+│              ▼                          │
+│           Edge                          │
+└─────────────────────────────────────────┘
     │
-    ├─── 192.168.1.222 ── Unraid Server (Primary - 22 containers)
-    ├─── 192.168.1.149 ── Home Assistant (Bare Metal)
-    ├─── 192.168.1.114 ── Proxmox Node 1
-    ├─── 192.168.1.124 ── Proxmox Node 2
-    └─── 192.168.1.11  ── Tailscale Node
+    ├─── VLAN 20 (IoT/RESTRICTED) ────────────────────────┐
+    │    NO WAN ACCESS - Edge only                        │
+    │    └── ESP32 Satellites, Smart Plugs, Lights        │
+    │                                                      │
+    └─── VLAN 30 (SECURITY/AIR-GAPPED) ───────────────────┤
+         Completely isolated - No Internet                 │
+         └── IP Cameras → Sentinel only                    │
 ```
 
-**Key Network Features:**
-- All services accessible via Tailscale from anywhere
-- No ports exposed to internet (Tailscale only)
-- Local subnet: 192.168.1.0/24
-- Docker networks: br0 (bridge), custom per-stack
+**VLAN Configuration:**
 
----
-
-## Storage Layout
-
-### Unraid Array
-```
-/mnt/user/
-├── appdata/           # Container configs
-│   ├── sonarr/
-│   ├── radarr/
-│   ├── plex/
-│   ├── home-assistant/
-│   └── ...
-├── media/             # Media library
-│   ├── movies/
-│   ├── tv/
-│   └── music/
-├── downloads/         # Download staging
-├── realdebrid/        # Zurg mount point
-└── backups/           # System backups
-```
+| VLAN | Name | Members | Rules |
+|------|------|---------|-------|
+| 10 | Trusted Command | Brain, Brawn, Workstation, Edge | Unrestricted internal, 10GbE fiber |
+| 20 | IoT Restricted | ESP32, Smart Plugs, Lights | NO WAN, Edge access only |
+| 30 | Security | IP Cameras, Sentinel | Air-gapped, Sentinel + Admin tunnel only |
 
 ---
 
@@ -184,62 +251,216 @@ Internet
 
 | Node | GPU | VRAM | Primary Use |
 |------|-----|------|-------------|
-| Unraid | Intel Arc A770 | 16GB | Plex transcoding, AI inference |
+| Brain | AMD RX 7900 XT | 20GB | AI inference (vLLM) - uncensored models |
+| Brawn | NVIDIA RTX 4070 | 12GB | Plex NVENC transcoding |
+| Sentinel | Dual Coral TPU | - | Object detection (<100ms) |
 
-**Model VRAM Requirements (Ollama on Unraid):**
-- 7B models: ~4GB Q4, ~8GB Q8
-- 13B models: ~8GB Q4, ~14GB Q8
-- Larger models may require offloading to CPU RAM
+**Model VRAM Requirements:**
+- 7B models: ~14GB FP16, ~4GB Q4
+- 13B models: ~26GB FP16, ~8GB Q4
+- 27B models: ~54GB FP16, ~14GB Q4 (AWQ/GPTQ)
+
+---
+
+## Storage Layout
+
+### Unraid Array (The Brawn)
+```
+/mnt/user/
+├── appdata/           # Container configs
+│   ├── sonarr/
+│   ├── radarr/
+│   ├── plex/
+│   └── ...
+├── media/             # Media library
+│   ├── movies/
+│   ├── tv/
+│   └── music/
+├── downloads/         # Download staging
+├── realdebrid/        # Zurg mount (Infinite Library)
+└── backups/           # System backups
+```
+
+### Pop!_OS (The Brain)
+```
+~/brain-ai/            # AI deployment files
+├── install-vllm.sh
+├── download-models.sh
+├── vllm-server.sh
+├── .env
+└── models/            # Downloaded models
+
+~/.cache/huggingface/  # HuggingFace cache
+```
 
 ---
 
 ## Service URLs (Quick Reference)
 
-### Unraid Server (192.168.1.222) - Primary Hub
-
-**Infrastructure:**
+### The Brain (Pop!_OS AI Node)
 | Service | URL |
 |---------|-----|
-| Unraid Web UI | http://192.168.1.222 |
-| Portainer | http://192.168.1.222:9000 |
-| Homepage | http://192.168.1.222:8010 |
-| Uptime Kuma | http://192.168.1.222:3010 |
-| Dozzle | http://192.168.1.222:9999 |
-| Traefik Dashboard | http://192.168.1.222:8183 |
+| Open WebUI | http://brain:3000 |
+| vLLM API | http://brain:8000/v1 |
+| AnythingLLM | http://brain:3001 |
+| Whisper (Wyoming) | tcp://brain:10300 |
+| Piper (Wyoming) | tcp://brain:10200 |
 
-**Media:**
+### The Brawn (Unraid Media/Storage)
 | Service | URL |
 |---------|-----|
-| Plex | http://192.168.1.222:32400/web |
-| Sonarr | http://192.168.1.222:8989 |
-| Radarr | http://192.168.1.222:7878 |
-| Prowlarr | http://192.168.1.222:9696 |
-| Bazarr | http://192.168.1.222:6767 |
-| Overseerr | http://192.168.1.222:5055 |
-| Tautulli | http://192.168.1.222:8181 |
-| Stremio | http://192.168.1.222:8089 |
+| Unraid Web UI | http://brawn |
+| Portainer | http://brawn:9000 |
+| Homepage | http://brawn:8010 |
+| Plex | http://brawn:32400/web |
+| Sonarr | http://brawn:8989 |
+| Radarr | http://brawn:7878 |
+| Prowlarr | http://brawn:9696 |
+| Overseerr | http://brawn:5055 |
+| Uptime Kuma | http://brawn:3010 |
 
-**AI:**
-| Service | URL |
-|---------|-----|
-| Open WebUI | http://192.168.1.222:3000 |
-| Ollama API | http://192.168.1.222:11434 |
-| Qdrant | http://192.168.1.222:6333 |
-| Whisper (Wyoming) | tcp://192.168.1.222:10300 |
-| Piper (Wyoming) | tcp://192.168.1.222:10200 |
-| WhisperLive | http://192.168.1.222:9091 |
-
-### Home Assistant (192.168.1.149)
+### The Edge (Home Assistant)
 | Service | URL |
 |---------|-----|
 | Home Assistant | http://192.168.1.149:8123 |
+
+### The Sentinel (NVR)
+| Service | URL |
+|---------|-----|
+| Blue Iris | http://sentinel:81 (Admin tunnel only) |
+
+---
+
+## Functional Capabilities Matrix
+
+| Domain | Node | Application | Capability |
+|--------|------|-------------|------------|
+| **Cognition** | Brain | vLLM | Sovereign Thought: Uncensored LLM inference |
+| **Cognition** | Brain | AnythingLLM | RAG: "Chat with Data" - PDFs, code, notes |
+| **Cognition** | Brain | Piper/Whisper | Conversation: Real-time STT/TTS |
+| **Control** | Workstation | VS Code | Development: Remote coding on Brain |
+| **Control** | Workstation | Portainer | Orchestration: Docker management |
+| **Control** | Workstation | Grafana | Observability: GPU temps, network, events |
+| **Media** | Brawn | Zurg/Rclone | Infinite Library: Cloud as local drive |
+| **Media** | Brawn | Plex/NVENC | Elastic Streaming: 4K transcoding |
+| **Media** | Brawn | Tunarr | Linear TV: Virtual channels |
+| **Security** | Sentinel | Blue Iris | Forensics: 24/7 continuous recording |
+| **Security** | Sentinel | Frigate | AI Sentry: Person/Cat/Car detection |
+| **Security** | Edge | Automation | Active Defense: Lock doors, flash lights |
+| **Sensory** | Swarm | Satellites | Telepathy: Room-scale voice commands |
+| **Sensory** | Swarm | Pi-hole | Digital Shield: Ad/telemetry blocking |
+
+---
+
+## Advanced Workflow Scenarios
+
+### A. The "Dev-Ops" Loop (Workstation + Brain)
+
+**Intent**: Create a new AI agent that monitors 3D Printer status.
+
+```
+┌─────────────┐     SSH      ┌─────────────┐
+│ Workstation │─────────────►│   Brain     │
+│   VS Code   │              │   vLLM      │
+└─────────────┘              └──────┬──────┘
+                                    │
+                                    ▼ Deploy
+                             ┌─────────────┐
+                             │    Edge     │
+                             │ Home Assist │
+                             └─────────────┘
+```
+
+1. VS Code connects remotely to Brain via SSH
+2. Prompt local LLM: "Write a Python script to poll OctoPrint API"
+3. Brain generates the code
+4. Deploy script to Edge (Home Assistant)
+
+### B. The "Security Overwatch" (Sentinel + Workstation)
+
+**Intent**: Investigate a noise outside at 3 AM.
+
+```
+┌─────────────┐  Admin Tunnel  ┌─────────────┐
+│ Workstation │───────────────►│  Sentinel   │
+│ Matrix View │                │ Blue Iris   │
+└─────────────┘                └──────┬──────┘
+       │                              │
+       │ Voice: "Jules, activate      │ Frigate
+       │ Perimeter Protocol"          │ Detection
+       ▼                              ▼
+┌─────────────┐              ┌─────────────┐
+│   Brain     │─────────────►│    Edge     │
+│  Interpret  │   Signal     │ Floodlights │
+└─────────────┘              └─────────────┘
+```
+
+1. Workstation pulls up Blue Iris "Matrix View" (VLAN 30 tunnel)
+2. Sentinel highlights "Person Detected" via Frigate
+3. Voice command: "Jules, activate Perimeter Protocol"
+4. Brain interprets → signals Edge → Floodlights ON
+
+### C. The "Immersive Media" Experience (Brawn + Workstation)
+
+**Intent**: Watch 4K movie while compiling code.
+
+```
+┌─────────────┐   Direct Play   ┌─────────────┐
+│ Workstation │◄────10GbE──────│   Brawn     │
+│    Plex     │   80Mbps 4K    │   Plex      │
+└─────────────┘                │   Zurg      │
+                               └─────────────┘
+```
+
+1. Open Plex on Workstation
+2. Brawn locates file (cached on Real-Debrid via Zurg)
+3. Direct Play over 10GbE fiber - zero buffering, zero transcoding
+
+---
+
+## Home Assistant Voice Pipeline
+
+```
+User speaks (via Swarm satellite)
+    │
+    ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     Whisper     │────►│      vLLM       │────►│      Piper      │
+│     (STT)       │     │    (Jules)      │     │     (TTS)       │
+│     Brain       │     │     Brain       │     │     Brain       │
+│   Port 10300    │     │   Port 8000     │     │   Port 10200    │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │  Home Assistant │
+                    │     (Edge)      │
+                    │   192.168.1.149 │
+                    └─────────────────┘
+```
+
+### Wyoming Protocol Configuration
+
+In Home Assistant, add these Wyoming integrations:
+
+**Whisper (Speech-to-Text):**
+- Host: `brain` (or IP of The Brain)
+- Port: `10300`
+
+**Piper (Text-to-Speech):**
+- Host: `brain` (or IP of The Brain)
+- Port: `10200`
+
+**LLM (via OpenAI-compatible API - vLLM):**
+- API Base URL: `http://brain:8000/v1`
+- API Key: `sk-no-key-needed`
 
 ---
 
 ## Automation Tools
 
 ### Chimera Media Stack Configurator
-Auto-configures all media service integrations:
+Auto-configures all media service integrations on The Brawn:
 ```bash
 # On Unraid via User Scripts or CLI
 ./chimera-setup.sh --auto
@@ -251,74 +472,40 @@ Auto-configures all media service integrations:
 - Bazarr → Sonarr/Radarr (subtitles)
 - Overseerr → Sonarr/Radarr (requests)
 
-### Ollama Model Management
+### vLLM Server Control (The Brain)
 ```bash
-# Pull new models
-docker exec ollama ollama pull llama3.2:latest
-docker exec ollama ollama pull nomic-embed-text:latest
-
-# List installed models
-docker exec ollama ollama list
-
-# Remove a model
-docker exec ollama ollama rm <model-name>
+~/brain-ai/vllm-server.sh start
+~/brain-ai/vllm-server.sh stop
+~/brain-ai/vllm-server.sh status
+~/brain-ai/vllm-server.sh logs
 ```
 
----
-
-## Home Assistant Integration
-
-**Home Assistant Location**: Bare metal at `192.168.1.149`
-
-### Voice Pipeline
+### Model Download
+```bash
+~/brain-ai/download-models.sh
 ```
-User speaks
-    │
-    ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Faster-Whisper │────►│     Ollama      │────►│      Piper      │
-│     (STT)       │     │     (LLM)       │     │     (TTS)       │
-│ 192.168.1.222   │     │ 192.168.1.222   │     │ 192.168.1.222   │
-│   Port 10300    │     │   Port 11434    │     │   Port 10200    │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  Home Assistant │
-                    │  192.168.1.149  │
-                    │   (Actions)     │
-                    └─────────────────┘
-```
-
-### Wyoming Protocol Configuration
-
-In Home Assistant, add these Wyoming integrations:
-
-**Whisper (Speech-to-Text):**
-- Host: `192.168.1.222`
-- Port: `10300`
-
-**Piper (Text-to-Speech):**
-- Host: `192.168.1.222`
-- Port: `10200`
-
-**LLM (via OpenAI-compatible API - Ollama):**
-- API Base URL: `http://192.168.1.222:11434/v1`
-- API Key: `ollama` (or any string)
-
-**Alternative: WhisperLive (Real-time):**
-- Host: `192.168.1.222`
-- Port: `9091`
 
 ---
 
 ## Core Doctrine
 
-1. **Digital Sovereignty** - All data stays local
+1. **Digital Sovereignty** - All data stays local, no Big Tech dependencies
 2. **Transparency** - All AI decisions logged
 3. **Self-Correction** - Systems adapt and improve
 4. **Replaceability** - No vendor lock-in
 5. **Operator Trust** - Human makes final decisions
+
+---
+
+## Resource Summary
+
+| Resource | Total |
+|----------|-------|
+| **Compute** | ~60+ Cores |
+| **VRAM** | 32GB (20GB AI + 12GB Media) |
+| **Storage** | Infinite Cloud + 25TB Local |
+| **Vision** | 360-degree AI surveillance |
+| **Voice** | Whole-home coverage |
 
 ---
 
@@ -335,28 +522,31 @@ In Home Assistant, add these Wyoming integrations:
 - Review AI model performance
 
 ### Monthly
-- Update Unraid OS
+- Update Unraid OS (Brawn)
+- Update Pop!_OS (Brain)
+- Update Proxmox (Sentinel)
 - Review and prune old media
 - Backup configurations
-- Update Proxmox nodes
 
 ### Backup Strategy
-- Unraid: Array parity protection
-- Appdata: Daily backup to secondary drive
-- Proxmox: VM/LXC snapshots
-- Critical configs: Git repository (this repo)
+- Brawn: Unraid array parity protection
+- Brain: Critical configs to Git
+- Sentinel: Proxmox VM/LXC snapshots
+- Edge: Home Assistant snapshots
 
 ---
 
 ## Credentials & Secrets
 
-**Location**: `/boot/config/plugins/chimera/` (Unraid)
+**Locations:**
+- Unraid (Brawn): `/boot/config/plugins/chimera/`
+- Pop!_OS (Brain): `~/.config/chimera/`
 
 **Required secrets:**
 - Plex claim token
 - Real-Debrid API key
 - Tailscale auth key
-- MQTT credentials (if using)
+- MQTT credentials
 
 **Never commit secrets to git!**
 
@@ -366,11 +556,13 @@ In Home Assistant, add these Wyoming integrations:
 
 ```
 hope/
-├── HOMELAB.md                 # This file (infrastructure overview)
+├── HOMELAB.md                 # This file (Jules Protocol reference)
 ├── HOME-ASSISTANT-VOICE.md    # Voice integration guide
-├── SETUP-GUIDE.md             # AI stack setup guide
+├── SETUP-GUIDE.md             # Brain AI setup guide
+├── install-vllm.sh            # vLLM installer
+├── download-models.sh         # Model downloader
 │
-└── unraid-deployment/
+└── unraid-deployment/         # Brawn deployment files
     ├── README.md              # Quick start
     ├── UNRAID-DEPLOYMENT.md   # Full guide
     ├── CHIMERA-SETUP.md       # Auto-configurator guide
@@ -389,7 +581,8 @@ hope/
 
 | Date | Change |
 |------|--------|
-| 2026-01-25 | Updated topology with correct IPs, removed outdated Pop!_OS references |
+| 2026-01-25 | Major rewrite: Full Jules Protocol 6-node architecture |
+| 2026-01-25 | Updated topology with correct IPs |
 | 2025-01-25 | Added Chimera media stack auto-configurator |
 | 2025-01-24 | Initial Unraid deployment files |
 | 2025-01-17 | vLLM bare metal installation |
@@ -398,3 +591,4 @@ hope/
 ---
 
 *Last updated: 2026-01-25*
+*Document: The Jules Protocol v1.4.0*
