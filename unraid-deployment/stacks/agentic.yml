@@ -1,0 +1,47 @@
+version: "3.8"
+
+networks:
+  ai_grid:
+    external: true
+    name: ${AI_GRID_NETWORK}
+
+services:
+  n8n:
+    image: n8n-io/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+    volumes:
+      - ${APPDATA_PATH}/n8n:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    networks:
+      - ai_grid
+
+  browserless:
+    image: browserless/chrome:latest
+    container_name: browserless
+    restart: unless-stopped
+    environment:
+      - TOKEN=${BROWSERLESS_TOKEN}
+      - MAX_CONCURRENT_SESSIONS=${BROWSERLESS_MAX_SESSIONS}
+      - STEALTH_PLUGIN=true
+    ports:
+      - "${BROWSERLESS_PORT}:3000"
+    networks:
+      - ai_grid
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    networks:
+      - ai_grid

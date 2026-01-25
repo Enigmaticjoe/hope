@@ -74,6 +74,32 @@ Deploy last:
 
 After all stacks are up, open the **Homepage** (http://192.168.1.9:8008). Edit the dashboard using the `homepage-dashboard.yaml` provided (place its contents in config.yml in the Homepage appdata folder, then refresh). You should then see a dashboard with sections for Infrastructure, Media, AI, and Home Automation – providing quick links to all services' web UIs.
 
+### e. Agentic Stack (n8n + Browserless + Cloudflare Tunnel)
+This stack is the foundation for your automated bidding configurator. It provides a workflow engine, headless browser automation, and Zero Trust ingress.
+
+**Prereqs:**
+- Create the custom network once:
+  ```bash
+  docker network create ai_grid
+  ```
+- Fill in `.env.agentic` (Cloudflare tunnel token, Browserless token, and public URLs).
+- Run the bootstrap script (checks port conflicts, Docker socket, and appdata folders):
+  ```bash
+  ./scripts/agentic-bootstrap.sh
+  ```
+
+**Deploy (Portainer or Docker Compose):**
+```bash
+docker compose -f stacks/agentic.yml --env-file .env.agentic up -d
+```
+
+**Cloudflare routing:**
+- `n8n.happystrugglebus.us` → `http://n8n:5678`
+- `browserless.happystrugglebus.us` → `http://browserless:3000`
+- Optional: `api.happystrugglebus.us` → `http://ollama:11434`
+
+See **[AGENTIC-BIDDING.md](./AGENTIC-BIDDING.md)** for the full agentic workflow, Open WebUI function bridge, and safeguards.
+
 ## 3. Post-Deployment Configuration
 
 Now that the containers are running, you have some one-time setups and integrations to do:
