@@ -20,10 +20,14 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 │   │  Role:          │    │  Role:          │    │  Role:          │        │
 │   │  Inference      │    │  Training/Batch │    │  Media/IoT      │        │
 │   └─────────────────┘    └─────────────────┘    └─────────────────┘        │
-│                                                                             │
+│           │                      │                      │                   │
+│           └──────────────────────┼──────────────────────┘                   │
+│                                  │                                          │
+│                                  ▼                                          │
 │                         ┌─────────────────┐                                 │
 │                         │  HOME ASSISTANT │                                 │
-│                         │  192.168.1.xxx  │                                 │
+│                         │  192.168.1.149  │                                 │
+│                         │   (Bare Metal)  │                                 │
 │                         │  Voice Control  │                                 │
 │                         └─────────────────┘                                 │
 │                                                                             │
@@ -95,9 +99,34 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 
 ---
 
-### Node 3: Unraid Server (Media & Automation Hub)
+### Node 3: Home Assistant (Bare Metal)
 
-**Primary Role**: Media serving, home automation, IoT hub, NVR
+**Primary Role**: Home automation hub, voice assistant, IoT coordinator
+
+| Component | Specification |
+|-----------|---------------|
+| **IP Address** | 192.168.1.149 |
+| **OS** | Home Assistant OS (bare metal) |
+| **Hardware** | Dedicated appliance/mini PC |
+
+**Services Running:**
+| Service | Port | Purpose |
+|---------|------|---------|
+| Home Assistant | 8123 | Automation hub |
+| Voice Assistant | - | Wyoming integration |
+
+**Integrations:**
+- Wyoming Protocol (connects to Whisper/Piper on Brawn)
+- OpenAI-compatible API (connects to vLLM on Brain)
+- Zigbee/Z-Wave devices
+- ESPHome devices
+- MQTT (Mosquitto on Unraid)
+
+---
+
+### Node 4: Unraid Server (Media & Storage Hub)
+
+**Primary Role**: Media serving, storage, container hosting, NVR
 
 | Component | Specification |
 |-----------|---------------|
@@ -140,14 +169,15 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 | Open WebUI | 3000 | Chat interface |
 | Qdrant | 6333 | Vector database |
 
-#### Home Automation Stack
+#### Home Automation Support Stack
 | Service | Port | Purpose |
 |---------|------|---------|
-| Home Assistant | 8123 | Automation hub |
 | Mosquitto | 1883 | MQTT broker |
 | Node-RED | 1880 | Visual automation |
-| Zigbee2MQTT | 8080 | Zigbee bridge |
+| Zigbee2MQTT | 8080 | Zigbee bridge (if not on HA) |
 | ESPHome | 6052 | ESP device management |
+
+*Note: Home Assistant runs on dedicated bare metal at 192.168.1.149*
 
 ---
 
@@ -169,10 +199,10 @@ Internet
 │  (all nodes)│                                    │  (mobile)   │
 └─────────────┘                                    └─────────────┘
     │
+    ├─── 192.168.1.149 ── Home Assistant (Bare Metal)
     ├─── 192.168.1.222 ── Unraid Server
     ├─── 192.168.1.223 ── The Brain
-    ├─── 192.168.1.224 ── The Brawn
-    └─── 192.168.1.xxx ── Home Assistant (dedicated)
+    └─── 192.168.1.224 ── The Brawn
 ```
 
 **Key Network Features:**
@@ -254,6 +284,11 @@ Internet
 | Whisper (Wyoming) | tcp://192.168.1.224:10300 |
 | Piper (Wyoming) | tcp://192.168.1.224:10200 |
 
+### Home Assistant (192.168.1.149)
+| Service | URL |
+|---------|-----|
+| Home Assistant | http://192.168.1.149:8123 |
+
 ### Unraid Server (192.168.1.222)
 | Service | URL |
 |---------|-----|
@@ -261,12 +296,12 @@ Internet
 | Portainer | https://192.168.1.222:9443 |
 | Homepage | http://192.168.1.222:8008 |
 | Plex | http://192.168.1.222:32400/web |
-| Home Assistant | http://192.168.1.222:8123 |
 | Sonarr | http://192.168.1.222:8989 |
 | Radarr | http://192.168.1.222:7878 |
 | Overseerr | http://192.168.1.222:5055 |
 | Uptime Kuma | http://192.168.1.222:3010 |
 | Dozzle | http://192.168.1.222:9999 |
+| Mosquitto MQTT | mqtt://192.168.1.222:1883 |
 
 ---
 
@@ -303,29 +338,47 @@ Auto-configures all media service integrations:
 
 ## Home Assistant Integration
 
+**Home Assistant Location**: Bare metal at `192.168.1.149`
+
 ### Voice Pipeline
 ```
 User speaks
     │
     ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Whisper   │────►│    vLLM     │────►│    Piper    │
-│   (STT)     │     │   (Brain)   │     │   (TTS)     │
-│ Port 10300  │     │  Port 8000  │     │ Port 10200  │
-└─────────────┘     └─────────────┘     └─────────────┘
-                          │
-                          ▼
-                    ┌─────────────┐
-                    │    Home     │
-                    │  Assistant  │
-                    │ (Actions)   │
-                    └─────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     Whisper     │────►│      vLLM       │────►│      Piper      │
+│     (STT)       │     │    (Brain)      │     │     (TTS)       │
+│ 192.168.1.224   │     │ 192.168.1.223   │     │ 192.168.1.224   │
+│   Port 10300    │     │   Port 8000     │     │   Port 10200    │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │  Home Assistant │
+                    │  192.168.1.149  │
+                    │   (Actions)     │
+                    └─────────────────┘
 ```
 
-### Wyoming Protocol Endpoints
-- Whisper STT: `tcp://192.168.1.224:10300`
-- Piper TTS: `tcp://192.168.1.224:10200`
-- LLM API: `http://192.168.1.223:8000/v1`
+### Wyoming Protocol Configuration
+
+In Home Assistant, add these Wyoming integrations:
+
+**Whisper (Speech-to-Text):**
+- Host: `192.168.1.224`
+- Port: `10300`
+
+**Piper (Text-to-Speech):**
+- Host: `192.168.1.224`
+- Port: `10200`
+
+**LLM (via OpenAI-compatible API):**
+- API Base URL: `http://192.168.1.223:8000/v1`
+- API Key: `sk-no-key-needed`
+
+### MQTT Integration
+- Broker: `192.168.1.222`
+- Port: `1883`
 
 ---
 
