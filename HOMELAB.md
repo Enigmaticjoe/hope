@@ -10,26 +10,23 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
-│   │   THE BRAIN     │    │   THE BRAWN     │    │  UNRAID SERVER  │        │
-│   │  192.168.1.223  │◄──►│  192.168.1.224  │◄──►│  192.168.1.222  │        │
+│   │  UNRAID SERVER  │    │  PROXMOX NODE   │    │  PROXMOX NODE   │        │
+│   │  192.168.1.222  │◄──►│  192.168.1.114  │◄──►│  192.168.1.124  │        │
 │   │                 │    │                 │    │                 │        │
-│   │  i5-13600K      │    │  Ultra 7 265F   │    │  Xeon           │        │
-│   │  RTX 4070 12GB  │    │  RX 7900 XT     │    │  Arc A770 16GB  │        │
-│   │  96GB RAM       │    │  128GB RAM      │    │  64GB RAM       │        │
+│   │  Unraid 7.2.2   │    │  Proxmox VE     │    │  Proxmox VE     │        │
+│   │  Media + AI     │    │  (VMs/LXC)      │    │  (VMs/LXC)      │        │
 │   │                 │    │                 │    │                 │        │
-│   │  Role:          │    │  Role:          │    │  Role:          │        │
-│   │  Inference      │    │  Training/Batch │    │  Media/IoT      │        │
+│   │  22 Containers  │    │                 │    │                 │        │
 │   └─────────────────┘    └─────────────────┘    └─────────────────┘        │
-│           │                      │                      │                   │
-│           └──────────────────────┼──────────────────────┘                   │
-│                                  │                                          │
-│                                  ▼                                          │
-│                         ┌─────────────────┐                                 │
-│                         │  HOME ASSISTANT │                                 │
-│                         │  192.168.1.149  │                                 │
-│                         │   (Bare Metal)  │                                 │
-│                         │  Voice Control  │                                 │
-│                         └─────────────────┘                                 │
+│           │                                                                 │
+│           │                                                                 │
+│           ▼                                                                 │
+│   ┌─────────────────┐                                                       │
+│   │  HOME ASSISTANT │                                                       │
+│   │  192.168.1.149  │                                                       │
+│   │   (Bare Metal)  │                                                       │
+│   │  Voice Control  │                                                       │
+│   └─────────────────┘                                                       │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -38,68 +35,55 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 
 ## Node Details
 
-### Node 1: The Brain (Pop!_OS AI Workstation)
+### Node 1: Unraid Server (Primary Hub)
 
-**Primary Role**: Low-latency AI inference, real-time chat, tool orchestration
-
-| Component | Specification |
-|-----------|---------------|
-| **IP Address** | 192.168.1.223 |
-| **OS** | Pop!_OS 24.04 |
-| **CPU** | Intel Core i5-13600K (14 cores) |
-| **GPU** | NVIDIA RTX 4070 (12GB VRAM) |
-| **RAM** | 96GB DDR5 |
-| **Storage** | NVMe SSD |
-
-**Services Running:**
-| Service | Port | Type | Purpose |
-|---------|------|------|---------|
-| vLLM | 8000 | Bare Metal | AI inference engine |
-| Ollama | 11434 | Bare Metal | Backup LLM runtime |
-| Open WebUI | 3000 | Bare Metal | Chat interface |
-| Qdrant | 6333 | Docker | Vector database |
-| Portainer | 9443 | Docker | Container management |
-
-**AI Models Loaded:**
-- Dolphin 12B (primary - uncensored, tool-capable)
-- Phi-4-abliterated (fast, uncensored)
-- nomic-embed-text (embeddings)
-
----
-
-### Node 2: The Brawn (Pop!_OS Workstation)
-
-**Primary Role**: Storage, batch processing, long-context workloads
+**Primary Role**: Media serving, AI inference, storage, container hosting
 
 | Component | Specification |
 |-----------|---------------|
-| **IP Address** | 192.168.1.224 |
-| **OS** | Pop!_OS 24.04 |
-| **CPU** | Intel Core Ultra 7 265F (20 cores) |
-| **GPU** | AMD RX 7900 XT (20GB VRAM) |
-| **RAM** | 128GB DDR5 |
-| **Storage** | NVMe SSD + HDD array |
+| **IP Address** | 192.168.1.222 |
+| **OS** | Unraid 7.2.2 |
+| **Containers** | 22 running |
+| **Uptime** | 7 days |
 
-**Services Running:**
-| Service | Port | Type | Purpose |
-|---------|------|------|---------|
-| vLLM | 8000 | Bare Metal | Large model inference |
-| Ollama | 11434 | Bare Metal | Model serving |
-| Open WebUI | 3000 | Bare Metal | Chat interface |
-| AnythingLLM | 3001 | Docker | Document RAG |
-| Qdrant | 6333 | Docker | Vector database |
-| SearXNG | 8888 | Docker | Private search |
-| Whisper | 10300 | Docker | Speech-to-text (Wyoming) |
-| Piper | 10200 | Docker | Text-to-speech (Wyoming) |
+**Docker Stacks (Currently Running):**
 
-**AI Models Available:**
-- Gemma-3-27B-Abliterated (AWQ quantized)
-- WizardLM-13B-Uncensored
-- Qwen2.5-7B-Instruct
+#### Infrastructure Stack
+| Service | Port | Status | Purpose |
+|---------|------|--------|---------|
+| Tailscale | host | Running | VPN access |
+| Homepage | 8010 | Healthy | Dashboard |
+| Uptime Kuma | 3010 | Healthy | Monitoring |
+| Dozzle | 9999 | Running | Log viewer |
+| Watchtower | - | Healthy | Auto-updates |
+| Portainer-BE | 9000 | Running | Container management |
+| Traefik | 8001/44301 | Running | Reverse proxy |
+
+#### Media Stack
+| Service | Port | Status | Purpose |
+|---------|------|--------|---------|
+| Plex | 32400 | Running | Media server |
+| Sonarr | 8989 | Running | TV management |
+| Radarr | 7878 | Running | Movie management |
+| Prowlarr | 9696 | Running | Indexer management |
+| Bazarr | 6767 | Running | Subtitles |
+| Overseerr | 5055 | Running | Media requests |
+| Tautulli | 8181 | Running | Plex analytics |
+| Stremio | 8089 | Running | Streaming |
+
+#### AI Stack
+| Service | Port | Status | Purpose |
+|---------|------|--------|---------|
+| Ollama | 11434 | Running | LLM inference |
+| Open WebUI | 3000 | Healthy | Chat interface |
+| Qdrant | 6333 | Running | Vector database |
+| Faster-Whisper | 10300 | Running | Speech-to-text (Wyoming) |
+| Piper | 10200 | Running | Text-to-speech (Wyoming) |
+| WhisperLive-GPU | 9091 | Running | Real-time transcription |
 
 ---
 
-### Node 3: Home Assistant (Bare Metal)
+### Node 2: Home Assistant (Bare Metal)
 
 **Primary Role**: Home automation hub, voice assistant, IoT coordinator
 
@@ -107,7 +91,7 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 |-----------|---------------|
 | **IP Address** | 192.168.1.149 |
 | **OS** | Home Assistant OS (bare metal) |
-| **Hardware** | Dedicated appliance/mini PC |
+| **Hardware** | Dedicated appliance |
 
 **Services Running:**
 | Service | Port | Purpose |
@@ -116,68 +100,28 @@ A **federated, privacy-first homelab** running local AI, media automation, and h
 | Voice Assistant | - | Wyoming integration |
 
 **Integrations:**
-- Wyoming Protocol (connects to Whisper/Piper on Brawn)
-- OpenAI-compatible API (connects to vLLM on Brain)
+- Wyoming Protocol (connects to Whisper/Piper on Unraid)
+- OpenAI-compatible API (connects to Ollama on Unraid)
 - Zigbee/Z-Wave devices
 - ESPHome devices
-- MQTT (Mosquitto on Unraid)
 
 ---
 
-### Node 4: Unraid Server (Media & Storage Hub)
+### Node 3: Proxmox Virtualization Cluster
 
-**Primary Role**: Media serving, storage, container hosting, NVR
+**Primary Role**: Virtual machines, LXC containers, additional compute
 
-| Component | Specification |
-|-----------|---------------|
-| **IP Address** | 192.168.1.222 |
-| **OS** | Unraid 7.2.2 |
-| **CPU** | Intel Xeon |
-| **GPU** | Intel Arc A770 (16GB VRAM) |
-| **RAM** | 64GB ECC |
-| **Storage** | Array (multiple TB) |
+| Node | IP Address | Status |
+|------|------------|--------|
+| Proxmox Node 1 | 192.168.1.114 | Online |
+| Proxmox Node 2 | 192.168.1.124 | Online |
+| Tailscale Node | 192.168.1.11 | Online |
 
-**Docker Stacks:**
-
-#### Infrastructure Stack
-| Service | Port | Purpose |
-|---------|------|---------|
-| Tailscale | - | VPN access |
-| Homepage | 8008 | Dashboard |
-| Uptime Kuma | 3010 | Monitoring |
-| Dozzle | 9999 | Log viewer |
-| Watchtower | - | Auto-updates |
-| Portainer | 9443 | Container management |
-
-#### Media Stack
-| Service | Port | Purpose |
-|---------|------|---------|
-| Plex | 32400 | Media server |
-| Sonarr | 8989 | TV management |
-| Radarr | 7878 | Movie management |
-| Prowlarr | 9696 | Indexer management |
-| Bazarr | 6767 | Subtitles |
-| Overseerr | 5055 | Media requests |
-| Tautulli | 8181 | Plex analytics |
-| Rdt-Client | 6500 | Real-Debrid client |
-| Zurg | 9090 | Real-Debrid mount |
-
-#### AI Stack
-| Service | Port | Purpose |
-|---------|------|---------|
-| Ollama | 11434 | LLM inference |
-| Open WebUI | 3000 | Chat interface |
-| Qdrant | 6333 | Vector database |
-
-#### Home Automation Support Stack
-| Service | Port | Purpose |
-|---------|------|---------|
-| Mosquitto | 1883 | MQTT broker |
-| Node-RED | 1880 | Visual automation |
-| Zigbee2MQTT | 8080 | Zigbee bridge (if not on HA) |
-| ESPHome | 6052 | ESP device management |
-
-*Note: Home Assistant runs on dedicated bare metal at 192.168.1.149*
+**Capabilities:**
+- VM hosting for isolated workloads
+- LXC containers for lightweight services
+- Cluster high-availability
+- Backup and snapshot management
 
 ---
 
@@ -196,13 +140,14 @@ Internet
     ▼                                                      ▼
 ┌─────────────┐                                    ┌─────────────┐
 │  Tailscale  │◄──────── Mesh VPN ────────────────►│  Tailscale  │
-│  (all nodes)│                                    │  (mobile)   │
+│  (Unraid)   │                                    │  (mobile)   │
 └─────────────┘                                    └─────────────┘
     │
+    ├─── 192.168.1.222 ── Unraid Server (Primary - 22 containers)
     ├─── 192.168.1.149 ── Home Assistant (Bare Metal)
-    ├─── 192.168.1.222 ── Unraid Server
-    ├─── 192.168.1.223 ── The Brain
-    └─── 192.168.1.224 ── The Brawn
+    ├─── 192.168.1.114 ── Proxmox Node 1
+    ├─── 192.168.1.124 ── Proxmox Node 2
+    └─── 192.168.1.11  ── Tailscale Node
 ```
 
 **Key Network Features:**
@@ -233,75 +178,61 @@ Internet
 └── backups/           # System backups
 ```
 
-### Pop!_OS Workstations
-```
-~/brain-ai/            # AI deployment files
-├── install-vllm.sh
-├── download-models.sh
-├── vllm-server.sh
-├── .env
-└── models/            # Downloaded models
-
-~/.cache/huggingface/  # HuggingFace cache
-~/.ollama/             # Ollama models
-```
-
 ---
 
 ## GPU Allocation
 
 | Node | GPU | VRAM | Primary Use |
 |------|-----|------|-------------|
-| Brain | RTX 4070 | 12GB | Fast inference (7B-13B models) |
-| Brawn | RX 7900 XT | 20GB | Large models (up to 27B quantized) |
-| Unraid | Arc A770 | 16GB | Plex transcoding, backup inference |
+| Unraid | Intel Arc A770 | 16GB | Plex transcoding, AI inference |
 
-**Model VRAM Requirements:**
-- 7B models: ~14GB FP16, ~4GB Q4
-- 13B models: ~26GB FP16, ~8GB Q4
-- 27B models: ~54GB FP16, ~14GB Q4 (AWQ/GPTQ)
-- 70B models: Not feasible on current hardware
+**Model VRAM Requirements (Ollama on Unraid):**
+- 7B models: ~4GB Q4, ~8GB Q8
+- 13B models: ~8GB Q4, ~14GB Q8
+- Larger models may require offloading to CPU RAM
 
 ---
 
 ## Service URLs (Quick Reference)
 
-### Brain Node (192.168.1.223)
-| Service | URL |
-|---------|-----|
-| Open WebUI | http://192.168.1.223:3000 |
-| vLLM API | http://192.168.1.223:8000/v1 |
-| Ollama API | http://192.168.1.223:11434 |
-| Portainer | https://192.168.1.223:9443 |
+### Unraid Server (192.168.1.222) - Primary Hub
 
-### Brawn Node (192.168.1.224)
+**Infrastructure:**
 | Service | URL |
 |---------|-----|
-| Open WebUI | http://192.168.1.224:3000 |
-| vLLM API | http://192.168.1.224:8000/v1 |
-| AnythingLLM | http://192.168.1.224:3001 |
-| SearXNG | http://192.168.1.224:8888 |
-| Whisper (Wyoming) | tcp://192.168.1.224:10300 |
-| Piper (Wyoming) | tcp://192.168.1.224:10200 |
+| Unraid Web UI | http://192.168.1.222 |
+| Portainer | http://192.168.1.222:9000 |
+| Homepage | http://192.168.1.222:8010 |
+| Uptime Kuma | http://192.168.1.222:3010 |
+| Dozzle | http://192.168.1.222:9999 |
+| Traefik Dashboard | http://192.168.1.222:8183 |
+
+**Media:**
+| Service | URL |
+|---------|-----|
+| Plex | http://192.168.1.222:32400/web |
+| Sonarr | http://192.168.1.222:8989 |
+| Radarr | http://192.168.1.222:7878 |
+| Prowlarr | http://192.168.1.222:9696 |
+| Bazarr | http://192.168.1.222:6767 |
+| Overseerr | http://192.168.1.222:5055 |
+| Tautulli | http://192.168.1.222:8181 |
+| Stremio | http://192.168.1.222:8089 |
+
+**AI:**
+| Service | URL |
+|---------|-----|
+| Open WebUI | http://192.168.1.222:3000 |
+| Ollama API | http://192.168.1.222:11434 |
+| Qdrant | http://192.168.1.222:6333 |
+| Whisper (Wyoming) | tcp://192.168.1.222:10300 |
+| Piper (Wyoming) | tcp://192.168.1.222:10200 |
+| WhisperLive | http://192.168.1.222:9091 |
 
 ### Home Assistant (192.168.1.149)
 | Service | URL |
 |---------|-----|
 | Home Assistant | http://192.168.1.149:8123 |
-
-### Unraid Server (192.168.1.222)
-| Service | URL |
-|---------|-----|
-| Unraid Web UI | http://192.168.1.222 |
-| Portainer | https://192.168.1.222:9443 |
-| Homepage | http://192.168.1.222:8008 |
-| Plex | http://192.168.1.222:32400/web |
-| Sonarr | http://192.168.1.222:8989 |
-| Radarr | http://192.168.1.222:7878 |
-| Overseerr | http://192.168.1.222:5055 |
-| Uptime Kuma | http://192.168.1.222:3010 |
-| Dozzle | http://192.168.1.222:9999 |
-| Mosquitto MQTT | mqtt://192.168.1.222:1883 |
 
 ---
 
@@ -320,18 +251,17 @@ Auto-configures all media service integrations:
 - Bazarr → Sonarr/Radarr (subtitles)
 - Overseerr → Sonarr/Radarr (requests)
 
-### vLLM Server Control
+### Ollama Model Management
 ```bash
-# On Pop!_OS nodes
-~/brain-ai/vllm-server.sh start
-~/brain-ai/vllm-server.sh stop
-~/brain-ai/vllm-server.sh status
-~/brain-ai/vllm-server.sh logs
-```
+# Pull new models
+docker exec ollama ollama pull llama3.2:latest
+docker exec ollama ollama pull nomic-embed-text:latest
 
-### Model Download
-```bash
-~/brain-ai/download-models.sh
+# List installed models
+docker exec ollama ollama list
+
+# Remove a model
+docker exec ollama ollama rm <model-name>
 ```
 
 ---
@@ -346,10 +276,10 @@ User speaks
     │
     ▼
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│     Whisper     │────►│      vLLM       │────►│      Piper      │
-│     (STT)       │     │    (Brain)      │     │     (TTS)       │
-│ 192.168.1.224   │     │ 192.168.1.223   │     │ 192.168.1.224   │
-│   Port 10300    │     │   Port 8000     │     │   Port 10200    │
+│  Faster-Whisper │────►│     Ollama      │────►│      Piper      │
+│     (STT)       │     │     (LLM)       │     │     (TTS)       │
+│ 192.168.1.222   │     │ 192.168.1.222   │     │ 192.168.1.222   │
+│   Port 10300    │     │   Port 11434    │     │   Port 10200    │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
                               │
                               ▼
@@ -365,20 +295,20 @@ User speaks
 In Home Assistant, add these Wyoming integrations:
 
 **Whisper (Speech-to-Text):**
-- Host: `192.168.1.224`
+- Host: `192.168.1.222`
 - Port: `10300`
 
 **Piper (Text-to-Speech):**
-- Host: `192.168.1.224`
+- Host: `192.168.1.222`
 - Port: `10200`
 
-**LLM (via OpenAI-compatible API):**
-- API Base URL: `http://192.168.1.223:8000/v1`
-- API Key: `sk-no-key-needed`
+**LLM (via OpenAI-compatible API - Ollama):**
+- API Base URL: `http://192.168.1.222:11434/v1`
+- API Key: `ollama` (or any string)
 
-### MQTT Integration
-- Broker: `192.168.1.222`
-- Port: `1883`
+**Alternative: WhisperLive (Real-time):**
+- Host: `192.168.1.222`
+- Port: `9091`
 
 ---
 
@@ -406,21 +336,21 @@ In Home Assistant, add these Wyoming integrations:
 
 ### Monthly
 - Update Unraid OS
-- Update Pop!_OS packages
 - Review and prune old media
 - Backup configurations
+- Update Proxmox nodes
 
 ### Backup Strategy
 - Unraid: Array parity protection
 - Appdata: Daily backup to secondary drive
-- Pop!_OS: Timeshift snapshots
+- Proxmox: VM/LXC snapshots
 - Critical configs: Git repository (this repo)
 
 ---
 
 ## Credentials & Secrets
 
-**Location**: `/boot/config/plugins/chimera/` (Unraid) or `~/.config/chimera/` (Pop!_OS)
+**Location**: `/boot/config/plugins/chimera/` (Unraid)
 
 **Required secrets:**
 - Plex claim token
@@ -436,13 +366,9 @@ In Home Assistant, add these Wyoming integrations:
 
 ```
 hope/
-├── docker-compose.yml          # Pop!_OS AI stack
-├── stack.env                   # Environment variables
-├── install-vllm.sh            # vLLM installer
-├── download-models.sh         # Model downloader
-├── SETUP-GUIDE.md             # Pop!_OS setup guide
+├── HOMELAB.md                 # This file (infrastructure overview)
 ├── HOME-ASSISTANT-VOICE.md    # Voice integration guide
-├── HOMELAB.md                 # This file
+├── SETUP-GUIDE.md             # AI stack setup guide
 │
 └── unraid-deployment/
     ├── README.md              # Quick start
@@ -451,6 +377,8 @@ hope/
     ├── stacks/                # Docker compose files
     ├── env-templates/         # Environment templates
     ├── scripts/               # Automation scripts
+    │   ├── chimera-setup.sh   # Media stack configurator
+    │   └── media_configurator.py
     ├── user-scripts/          # Unraid User Scripts
     └── portainer/             # Portainer stacks
 ```
@@ -461,6 +389,7 @@ hope/
 
 | Date | Change |
 |------|--------|
+| 2026-01-25 | Updated topology with correct IPs, removed outdated Pop!_OS references |
 | 2025-01-25 | Added Chimera media stack auto-configurator |
 | 2025-01-24 | Initial Unraid deployment files |
 | 2025-01-17 | vLLM bare metal installation |
