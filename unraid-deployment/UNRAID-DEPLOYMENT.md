@@ -1,19 +1,19 @@
 # Unraid Smart Server Deployment Guide
 
-Welcome to your smart Unraid deployment! This guide covers the setup of Media Services, AI Tools, Infrastructure, Agentic Workflows, and Home Automation on your Unraid server (**192.168.1.222**).
+Welcome to your smart Unraid deployment! This guide covers the setup of Media Services, AI Tools, Infrastructure, Agentic Workflows, and Home Automation on your Unraid server.
 
 ## 1. Prerequisites
 
 ### Unraid & Hardware
-Your system is a powerhouse, but there is one critical configuration detail regarding your CPU:
-* **CPU:** Intel Core i5-13600KF (Note: The "F" means **no integrated graphics**).
-* **GPU:** NVIDIA GeForce RTX 4070.
-* **RAM:** 96 GB (Excellent for loading large LLMs into memory).
+Match these details to your system. The stacks are GPU-aware and support both NVIDIA and AMD workflows (ROCm for AI, NVENC/AMF for media).
+* **CPU:** Verify if you have iGPU QuickSync (Intel non-F SKU) or must use a discrete GPU.
+* **GPU:** NVIDIA or AMD supported.
+* **RAM:** 64 GB+ recommended for AI workloads.
 * **Storage:**
-    * Cache: Samsung 990 EVO Plus (`/mnt/cache`)
-    * Vector DB: WD Black SN850X (`/mnt/qdrant`)
+    * Cache: `/mnt/cache`
+    * Vector DB: `/mnt/qdrant` (or an NVMe mount)
 
-**Critical Step:** Since your CPU lacks QuickSync, you **must** use the RTX 4070 for Plex hardware transcoding and AI acceleration. Ensure the **NVIDIA Driver** plugin is installed from Community Apps and the GPU UUID is visible in `nvidia-smi`.
+**Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the matching driver plugin is installed and GPU is visible in `nvidia-smi` (NVIDIA) or `rocm-smi` (AMD).
 
 ### Accounts/Subscriptions
 - **Plex Pass** (Required for hardware transcoding on NVIDIA).
@@ -22,12 +22,23 @@ Your system is a powerhouse, but there is one critical configuration detail rega
 - **Cloudflare** (For the Agentic stack tunnels).
 
 ### Networking
-* **Server IP:** `192.168.1.222`
-* **Gateway:** `192.168.1.1` (Assumed)
+* **Server IP:** `UNRAID_IP` (example: `192.168.1.222`)
+* **Gateway:** `192.168.1.1` (example)
 * **Subnet:** `192.168.1.0/24`
 
 ### Portainer or Docker Compose
-The provided `auto-deploy.sh` script handles deployment. Ensure you have filled out the `.env` files in `env-templates/` and renamed them to `.env.infrastructure`, `.env.media`, etc.
+The provided installer supports a fully automated path. Ensure you have filled out the `.env` files in `env-templates/` and renamed them to `.env.infrastructure`, `.env.media`, etc.
+
+**Recommended (Automated)**
+```bash
+cd unraid-deployment
+./scripts/chimera-install.sh --all
+```
+
+**Targeted stacks**
+```bash
+./scripts/chimera-install.sh --prepare --validate --deploy --stack media
+```
 
 ---
 
@@ -43,7 +54,7 @@ Deploy this first to establish the backbone and remote access.
 **Post-Deploy:**
 * Log into Tailscale Admin and approve the `unraid` node.
 * Enable "Subnet Routes" for `192.168.1.0/24` to access other LAN devices remotely.
-* **Verify:** Access Homepage at `http://192.168.1.222:8008`.
+* **Verify:** Access Homepage at `http://UNRAID_IP:8008`.
 
 ### b. Media Stack (Plex + Arr Suite + Real-Debrid)
 **File:** `stacks/media.yml`
@@ -56,11 +67,11 @@ This sets up your "Netflix-like" streaming experience.
 * **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the Zurg mount or your local `downloads` share on the cache.
 
 **Verify:**
-* **Plex:** `http://192.168.1.222:32400`
-* **Overseerr:** `http://192.168.1.222:5055` (Request hub)
+* **Plex:** `http://UNRAID_IP:32400`
+* **Overseerr:** `http://UNRAID_IP:5055` (Request hub)
 
 ### c. AI Core Stack (Ollama + Open WebUI + Qdrant)
-**File:** `stacks/ai-core.yml`
+**File:** `stacks/ai-core.yml` (NVIDIA) or `stacks/ai-core-amd.yml` (AMD ROCm)
 
 This enables your local "Sovereign AI" using the RTX 4070.
 
@@ -73,26 +84,26 @@ You have a dedicated NVMe partition mounted at `/mnt/qdrant` on your WD Black SN
     ```
 
 **Services:**
-* **Ollama (Brain):** Running on port `11434`. It will offload layers to the RTX 4070 VRAM (12GB). With 96GB system RAM, you can also run massive models (70B parameters) using CPU offloading if needed.
-* **Open WebUI (Chat):** `http://192.168.1.222:3000`. Connects to Ollama and Qdrant for RAG (chatting with your docs).
+* **Ollama (Brain):** Running on port `11434`. On AMD, use the ROCm image and set `HSA_OVERRIDE_GFX_VERSION=11.0.0` in `.env.ai-core`.
+* **Open WebUI (Chat):** `http://UNRAID_IP:3000`. Connects to Ollama and Qdrant for RAG (chatting with your docs).
 
 ### d. Agentic Stack (n8n + Browserless + Cloudflare)
 **File:** `stacks/agentic.yml`
 
 This stack powers your automated bidding and web scraping workflows.
 
-1.  **Prerequisite:** Create the shared network: `docker network create ai_grid`
+1.  **Prerequisite:** Create the shared network: `docker network create ai_grid` (or run `./scripts/agentic-bootstrap.sh`)
 2.  **Cloudflare:** Ensure `CF_TUNNEL_TOKEN` is set in `.env.agentic`. This exposes `n8n` and `browserless` securely to the web without opening router ports.
 3.  **n8n:** The workflow automation tool (`:5678`). It can control your browserless instance to scrape sites and use Ollama to analyze the data (e.g., pricing analysis).
 
 **Verify:**
-* **n8n:** `https://n8n.happystrugglebus.us` (or your configured domain)
-* **Browserless:** `http://192.168.1.222:3000` (internal debug view)
+* **n8n:** `https://n8n.example.com` (or your configured domain)
+* **Browserless:** `http://UNRAID_IP:3000` (internal debug view)
 
 ### e. Home Automation Stack
 **File:** `stacks/home-automation.yml`
 
-* **Home Assistant:** `http://192.168.1.222:8123`.
+* **Home Assistant:** `http://UNRAID_IP:8123`.
 * **Zigbee:** Your diagnostics did not explicitly show a plugged-in Zigbee USB stick (only a UPS and peripherals). If you are using a network-based coordinator (like a SLZB-06), configure Zigbee2MQTT to point to its IP. If using a USB stick, ensure it is passed through in the YAML (`/dev/ttyUSB0`).
 
 ---
@@ -100,10 +111,24 @@ This stack powers your automated bidding and web scraping workflows.
 ## 3. Post-Deployment Checklist
 
 1.  **Check GPU Usage:**
-    Run `watch nvidia-smi` in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
+    Run `watch nvidia-smi` (NVIDIA) or `watch rocm-smi` (AMD) in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
 2.  **Backups:**
     Your AppData is on `/mnt/cache` (Samsung 990 EVO). Ensure the **Appdata Backup** plugin is installed and scheduled to back up to the Array (HDD) weekly.
 3.  **Security:**
     Since `n8n` is exposed via Cloudflare, ensure you have enabled **Cloudflare Access** (Zero Trust) policies so only your email can access the endpoint, or set up strong authentication within n8n.
 
-Enjoy your new high-performance homelab! 🚀
+## 4. Cloudflare Tunnel Ingress (Optional)
+
+For full ecosystem access via Cloudflare Zero Trust:
+1. Add your routes in the Zero Trust dashboard.
+2. Optional local ingress template: `configs/cloudflared-ingress.yml`.
+3. Set `CF_TUNNEL_TOKEN` in `.env.agentic`.
+
+## 5. Operator Cheat Sheets
+
+See **[CHEATSHEETS.md](./CHEATSHEETS.md)** for:
+- Prompts and workflows for automation
+- Service configuration checklists
+- Voice/assistant integration notes
+
+Enjoy your new high-performance homelab!
