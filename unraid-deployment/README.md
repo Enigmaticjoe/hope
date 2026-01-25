@@ -54,16 +54,32 @@ docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
 ```
 
 ### 4. Auto-Configure Media Stack (Recommended)
-After deploying the media stack, run the Chimera configurator to automatically wire everything together:
+After deploying the media stack, run the Chimera configurator to automatically wire everything together.
 
+**Three deployment options:**
+
+#### Option A: User Scripts Plugin (Easiest)
 ```bash
-# Fully automatic mode - discovers services, extracts API keys, configures integrations
+# Copy to User Scripts
+mkdir -p /boot/config/plugins/user.scripts/scripts/chimera-configurator
+mkdir -p /boot/config/plugins/chimera
+cp user-scripts/chimera-configurator/* /boot/config/plugins/user.scripts/scripts/chimera-configurator/
+cp user-scripts/chimera-configurator/media_configurator.py /boot/config/plugins/chimera/
+```
+Then go to **Settings → User Scripts** and run "Chimera Media Stack Configurator"
+
+#### Option B: Portainer Stack
+Deploy `portainer/chimera-configurator/docker-compose-simple.yml` as a stack in Portainer.
+
+#### Option C: Command Line
+```bash
+# Fully automatic mode
 ./scripts/chimera-setup.sh --auto
 
-# Or preview changes first
+# Preview changes first
 ./scripts/chimera-setup.sh --auto --dry-run
 
-# Or use interactive mode for step-by-step setup
+# Interactive mode
 ./scripts/chimera-setup.sh --interactive
 ```
 
@@ -74,7 +90,7 @@ This automatically configures:
 - Overseerr → Sonarr/Radarr (requests)
 - Root folders and paths
 
-See [scripts/MEDIA-CONFIGURATOR.md](./scripts/MEDIA-CONFIGURATOR.md) for full documentation.
+See **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** for full deployment guide.
 
 ### 5. Configure Homepage Dashboard
 Copy the dashboard configuration to your Homepage appdata folder:
@@ -122,6 +138,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 
 For complete setup instructions, configuration details, and troubleshooting:
 - **[UNRAID-DEPLOYMENT.md](./UNRAID-DEPLOYMENT.md)** - Comprehensive deployment guide
+- **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** - Media stack auto-configuration (User Scripts, Portainer, CLI)
 
 ## 🛠 Utility Scripts
 

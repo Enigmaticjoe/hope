@@ -1,0 +1,6 @@
+Automatically configure integrations between Sonarr, Radarr, Prowlarr, Rdt-Client, Bazarr, and Overseerr. Discovers running Docker containers, extracts API keys from config files, and wires everything together.
+
+Run with no arguments for interactive menu, or use:
+  --auto        Fully automatic setup
+  --status      Check current status
+  --dry-run     Preview changes
