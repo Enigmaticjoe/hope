@@ -5,7 +5,7 @@ Welcome to your smart Unraid deployment! This guide covers the setup of Media Se
 ## 1. Prerequisites
 
 ### Unraid & Hardware
-Ensure Unraid is up-to-date and your server (192.168.1.9) is running Docker. If you plan to use GPU-accelerated services (Plex transcoding, Ollama AI), install the NVIDIA Drivers plugin via Community Apps and reboot – verify with `nvidia-smi` on the Unraid console.
+Ensure Unraid is up-to-date and your server (192.168.1.9) is running Docker. If you plan to use GPU-accelerated services (Plex transcoding, Ollama AI), install the AMD ROCm stack for Unraid and confirm `/dev/kfd` and `/dev/dri` are present. On the Unraid console, verify with `rocm-smi` before deploying GPU-backed containers.
 
 ### Accounts/Subscriptions
 - **Plex Pass** account (for hardware transcoding and Plex features).
@@ -17,7 +17,7 @@ Ensure Unraid is up-to-date and your server (192.168.1.9) is running Docker. If 
 The guide uses local IPs (e.g. 192.168.1.9). Update to match your network. We assume a LAN subnet of 192.168.1.0/24. Tailscale will handle secure remote access, so no ports need opening on your router.
 
 ### Portainer or Docker Compose
-You can deploy the stacks using Portainer's Stacks UI (by uploading each YAML) or via command-line using Docker Compose. The provided `auto-deploy.sh` script assumes the Docker Compose plugin is available. If using Portainer, create four stacks (infrastructure, media, ai-core, home-automation) with the respective YAML content and .env files.
+You can deploy the stacks using Portainer's Stacks UI (by uploading each YAML) or via command-line using Docker Compose. The provided `auto-deploy.sh` script assumes the Docker Compose plugin is available. If using Portainer, create five stacks (infrastructure, media, ai-core, agentic, home-automation) with the respective YAML content and .env files.
 
 > **Important:** Review and fill in all .env files with your specific values (user IDs, API keys, passwords, etc.) before deploying. Keep these files secure and out of version control.
 
@@ -54,15 +54,35 @@ Deploy next. Before deployment:
 ### c. AI Core Stack (Ollama + OpenWebUI + Qdrant)
 This provides local AI capabilities:
 
-- **Ollama** is the LLM backend. It's running on port 11434 with GPU support. Check `gpu-check.sh` output or run `nvidia-smi` to ensure it's utilizing your RTX 4070.
+- **Ollama** is the LLM backend. It's running on port 11434 with GPU support. Confirm ROCm visibility with `rocm-smi`, and ensure your .env.ai-core sets `HSA_OVERRIDE_GFX_VERSION=11.0.0` for RDNA3.
 - **Open WebUI** (http://192.168.1.9:3000) is a user-friendly web chat interface. Open it in your browser – it's like your private ChatGPT. The first time, it may have no models installed. To install a model:
   - Either use the Open WebUI interface's model management to download a model from HuggingFace/Ollama, or open Unraid console and run: `docker exec ollama ollama pull llama2` (for example) to download a suitable LLM.
   - Once a model is available, you can chat with it in Open WebUI. The interface also supports **RAG (Retrieval Augmented Generation)**: It's connected to the Qdrant vector database.
 - **Qdrant** is a vector DB for storing embeddings. Open WebUI will use Qdrant to store knowledge bases. You can test this: in Open WebUI, go to Documents/Knowledge section and upload a PDF or text file. The data will be indexed into Qdrant (collections prefixed with open-webui in Qdrant). You can then ask the AI about that document, and it will retrieve relevant info from Qdrant to augment the answer.
 - Verify Qdrant is running (http://192.168.1.9:6333 – it may show a simple "Qdrant ok" message or JSON). The stack's .env has no secret for Qdrant since we run it open on LAN; if you secure Qdrant with an API key, add it to both Qdrant config and QDRANT_API_KEY in Open WebUI env.
-- **GPU Use:** Ollama will automatically use the GPU for inference (we set it to use all GPUs). Qdrant is configured (QDRANT__GPU__INDEXING=1) to use the GPU for indexing vectors, speeding up large imports. You can monitor GPU usage with `watch nvidia-smi` during heavy AI tasks.
+- **GPU Use:** Ollama will automatically use the GPU for inference via ROCm device mappings. You can monitor GPU usage with `watch rocm-smi` during heavy AI tasks.
 
-### d. Home Automation Stack (Home Assistant + MQTT + Node-RED + Zigbee2MQTT)
+### d. Agentic Stack (n8n + Browserless + Cloudflared)
+This stack enables the automated bidding "minion" and secure external access:
+
+- **n8n** (http://192.168.1.9:5678) orchestrates bidding workflows and webhook triggers.
+- **Browserless** (http://192.168.1.9:3001) provides headless Chrome for scraping and bidding actions. Use the `BROWSERLESS_TOKEN` in your n8n HTTP nodes.
+- **Cloudflared** establishes an outbound tunnel to Cloudflare Zero Trust so you can safely route subdomains like `n8n.happystrugglebus.us`, `ai.happystrugglebus.us`, and `api.happystrugglebus.us` without opening router ports.
+
+Before deploying, create the shared Docker network used by the AI stack:
+
+```bash
+cd /path/to/unraid-deployment
+./scripts/create-ai-network.sh
+```
+
+Then populate `.env.agentic` with your Cloudflare tunnel token and access policy settings. Define ingress routes in the Cloudflare dashboard to point to internal container URLs, for example:
+
+- `ai.happystrugglebus.us` → `http://openwebui:8080`
+- `n8n.happystrugglebus.us` → `http://n8n:5678`
+- `api.happystrugglebus.us` → `http://ollama:11434`
+
+### e. Home Automation Stack (Home Assistant + MQTT + Node-RED + Zigbee2MQTT)
 Deploy last:
 
 - **Home Assistant:** Since you have an existing HA OS on a separate box, you might not need to run this container. (If you continue using your external HA, you can skip the homeassistant service in the YAML or ignore it.) However, the stack is provided in case you want to migrate to a supervised HA in Docker. It's configured in host networking mode so it can discover devices on your LAN. Access it at http://192.168.1.9:8123 (if running).
@@ -124,7 +144,7 @@ Your deployment includes sensitive information (API keys, passwords) in environm
 - **Tailscale Keys:** The Tailscale auth key in .env.infrastructure is one-time use (if you generated a reusable key, treat it like a password). After your server connects the first time, you can remove the key from the .env for security (the container will remember its auth state in the volume). Revoke keys in Tailscale admin if leaked.
 - **Plex Token:** Similarly, if you used PLEX_CLAIM, it's not needed after claiming. It's safe to leave blank post-deployment so it isn't accidentally reused.
 
-Finally, note that with Tailscale providing secure access, you do not have traditional HTTPS certificates for your services (connections are encrypted at the VPN layer). When accessing via MagicDNS (e.g. https://unraid.tailnet.ts.net), you actually get a Tailscale-provided TLS cert. If you want to expose certain services to the internet without requiring VPN (not generally recommended for private services), you could integrate Cloudflare Tunnel or Caddy with Cloudflare DNS – but in this setup, it's unnecessary due to Tailscale's zero-config VPN.
+Finally, note that with Tailscale providing secure access, you do not have traditional HTTPS certificates for your services (connections are encrypted at the VPN layer). When accessing via MagicDNS (e.g. https://unraid.tailnet.ts.net), you actually get a Tailscale-provided TLS cert. If you want to expose certain services to the internet without requiring VPN, use Cloudflare Tunnel with Zero Trust policies (as configured in the Agentic stack) to avoid opening router ports.
 
 ## 5. Troubleshooting & Next Steps
 
@@ -135,7 +155,7 @@ Use `docker ps` to ensure all containers are "healthy" or "running". Check Porta
 - **Missing or incorrect env values** (e.g., a typo in RD_API_KEY or expired PLEX_CLAIM token). Containers may exit if they can't validate keys.
 - **Port conflicts:** If Unraid's GUI or another service was using a port we mapped, you'll need to adjust the port in the .env and redeploy. For example, if 8123 was in use, change HOMEASSISTANT_PORT and update the compose.
 - **File permissions:** We set PUID/PGID to 1000 in most containers (you can change to Unraid's nobody user 99 if preferred). If you see permission issues writing to /mnt/user, ensure the UID matches or simply use 99/100 which has broad access on Unraid shares.
-- **GPU not being used:** Run `gpu-check.sh`. If it warns that Ollama is not using the NVIDIA runtime, double-check that the Docker Engine has the NVIDIA runtime configured (/etc/docker/daemon.json on Unraid should contain the Nvidia runtime — the plugin usually does this). Also ensure your containers were created after the Nvidia plugin was installed (recreate if not).
+- **GPU not being used:** Run `gpu-check.sh`. If it warns that Ollama is not using the GPU, confirm `/dev/kfd` and `/dev/dri` are available in the container and that `HSA_OVERRIDE_GFX_VERSION=11.0.0` is set for RDNA3. Also ensure your containers were created after ROCm was installed (recreate if not).
 
 ### Stopping/Starting Stacks
 You can manage each stack via Portainer (Stacks section) or via CLI (`docker compose -f <stack>.yml up -d` / `down`). The stacks are mostly independent, but do consider dependencies:
@@ -159,7 +179,7 @@ You can also set up healthchecks for critical flows (like an API call to OpenWeb
 
 ### Next Steps and Ideas
 
-- **Integrate Frigate NVR:** If you have IP cameras, you can deploy the Frigate container (with GPU decode support) and integrate it with Home Assistant. Use your AI stack's GPU for object detection (Frigate supports NVIDIA CUDA).
+- **Integrate Frigate NVR:** If you have IP cameras, you can deploy the Frigate container (with GPU decode support) and integrate it with Home Assistant. Use your AI stack's GPU for object detection with appropriate ROCm or VAAPI support for AMD.
 - **Wire up HA <> AI:** For example, use an automation or Node-RED flow to send your AI a daily summary of sensor data ("How was the house temperature today?") – the Open WebUI can ingest the data via its API and generate a summary, which HA can then send to you as a notification. This is cutting-edge smart home stuff!
 - **Cloud Storage:** If you need a personal cloud (Nextcloud/Syncthing), you have a cloud-stack plan from the initial design (Nextcloud + MariaDB + Collabora). This was not deployed here, but you can easily add it as another stack later. Given you have Tailscale, you could also consider simpler solutions like Syncthing to sync files across your devices via the VPN.
 

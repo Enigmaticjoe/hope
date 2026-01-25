@@ -1,20 +1,24 @@
 #!/bin/bash
 # auto-deploy.sh - Pull latest images and deploy all stack YMLs via Portainer/Compose.
 
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STACK_DIR="$BASE_DIR/stacks"
+
 # Load environment variables from .env files
 set -a
-[ -f .env.infrastructure ] && source .env.infrastructure
-[ -f .env.media ] && source .env.media
-[ -f .env.ai-core ] && source .env.ai-core
-[ -f .env.home-automation ] && source .env.home-automation
+[ -f "$BASE_DIR/.env.infrastructure" ] && source "$BASE_DIR/.env.infrastructure"
+[ -f "$BASE_DIR/.env.media" ] && source "$BASE_DIR/.env.media"
+[ -f "$BASE_DIR/.env.ai-core" ] && source "$BASE_DIR/.env.ai-core"
+[ -f "$BASE_DIR/.env.home-automation" ] && source "$BASE_DIR/.env.home-automation"
+[ -f "$BASE_DIR/.env.agentic" ] && source "$BASE_DIR/.env.agentic"
 set +a
 
 # (Optional) If secrets are stored in a secure location, copy them into .env files
-if [ -d ./secrets ]; then
-  for envfile in .env.infrastructure .env.media .env.ai-core .env.home-automation; do
-    if [ -f ./secrets/$envfile ]; then
+if [ -d "$BASE_DIR/secrets" ]; then
+  for envfile in .env.infrastructure .env.media .env.ai-core .env.home-automation .env.agentic; do
+    if [ -f "$BASE_DIR/secrets/$envfile" ]; then
       echo "Copying secret file for $envfile"
-      cp ./secrets/$envfile $envfile
+      cp "$BASE_DIR/secrets/$envfile" "$BASE_DIR/$envfile"
     fi
   done
 fi
@@ -38,28 +42,40 @@ EOF
     mosquitto_passwd -c -b /mosquitto/config/passwordfile "$MQTT_USER" "$MQTT_PASSWORD"
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/create-ai-network.sh" ]; then
+  "$SCRIPT_DIR/create-ai-network.sh"
+fi
+
 echo "Pulling latest Docker images for all stacks..."
-docker compose -f infrastructure.yml --env-file .env.infrastructure pull
-docker compose -f media.yml --env-file .env.media pull
-docker compose -f ai-core.yml --env-file .env.ai-core pull
-docker compose -f home-automation.yml --env-file .env.home-automation pull
+docker compose -f "$STACK_DIR/infrastructure.yml" --env-file "$BASE_DIR/.env.infrastructure" pull
+docker compose -f "$STACK_DIR/media.yml" --env-file "$BASE_DIR/.env.media" pull
+docker compose -f "$STACK_DIR/ai-core.yml" --env-file "$BASE_DIR/.env.ai-core" pull
+docker compose -f "$STACK_DIR/home-automation.yml" --env-file "$BASE_DIR/.env.home-automation" pull
+if [ -f "$BASE_DIR/.env.agentic" ]; then
+  docker compose -f "$STACK_DIR/agentic.yml" --env-file "$BASE_DIR/.env.agentic" pull
+fi
 
 echo "Deploying infrastructure stack..."
-docker compose -f infrastructure.yml --env-file .env.infrastructure up -d
+docker compose -f "$STACK_DIR/infrastructure.yml" --env-file "$BASE_DIR/.env.infrastructure" up -d
 
 echo "Deploying media stack..."
-docker compose -f media.yml --env-file .env.media up -d
+docker compose -f "$STACK_DIR/media.yml" --env-file "$BASE_DIR/.env.media" up -d
 
 echo "Deploying AI core stack..."
-docker compose -f ai-core.yml --env-file .env.ai-core up -d
+docker compose -f "$STACK_DIR/ai-core.yml" --env-file "$BASE_DIR/.env.ai-core" up -d
 
 echo "Deploying home automation stack..."
-docker compose -f home-automation.yml --env-file .env.home-automation up -d
+docker compose -f "$STACK_DIR/home-automation.yml" --env-file "$BASE_DIR/.env.home-automation" up -d
+
+if [ -f "$BASE_DIR/.env.agentic" ]; then
+  echo "Deploying agentic stack..."
+  docker compose -f "$STACK_DIR/agentic.yml" --env-file "$BASE_DIR/.env.agentic" up -d
+fi
 
 echo "All stacks deployed. Verify via Portainer UI or 'docker ps' that containers are running."
 
 # Optional: Run Chimera media stack auto-configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$SCRIPT_DIR/chimera-setup.sh" ]; then
     echo ""
     echo "============================================"

@@ -6,7 +6,7 @@ Complete, modular deployment files for a fully-featured Unraid smart home server
 
 ### 1. Prerequisites
 - Unraid server with Docker support
-- NVIDIA GPU drivers installed (for AI features)
+- AMD ROCm stack installed (for AI features on RDNA3)
 - Accounts: Plex Pass, Real-Debrid, Tailscale
 
 ### 2. Setup Environment Files
@@ -18,9 +18,16 @@ cp env-templates/.env.infrastructure .env.infrastructure
 cp env-templates/.env.media .env.media
 cp env-templates/.env.ai-core .env.ai-core
 cp env-templates/.env.home-automation .env.home-automation
+cp env-templates/.env.agentic .env.agentic
 ```
 
 Edit each `.env.*` file with your specific values (API keys, paths, etc.)
+
+Create the dedicated Docker network used by the AI and agentic services:
+
+```bash
+./scripts/create-ai-network.sh
+```
 
 ### 3. Deploy the Stacks
 
@@ -34,7 +41,7 @@ cd unraid-deployment
 1. Open Portainer web UI (http://your-unraid-ip:9000)
 2. Create a new stack for each YAML file in `stacks/`
 3. Upload the corresponding `.env` file for each stack
-4. Deploy in order: infrastructure → media → ai-core → home-automation
+4. Deploy in order: infrastructure → media → ai-core → agentic → home-automation
 
 #### Option C: Using Docker Compose
 ```bash
@@ -48,6 +55,9 @@ docker compose -f media.yml --env-file ../.env.media up -d
 
 # Deploy AI core stack
 docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
+
+# Deploy agentic stack
+docker compose -f agentic.yml --env-file ../.env.agentic up -d
 
 # Deploy home automation stack
 docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
@@ -127,6 +137,11 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
 
+### Agentic Stack
+- **n8n** - Workflow orchestration for agentic automations
+- **Browserless** - Headless Chrome API for web automation
+- **Cloudflared** - Cloudflare Zero Trust tunnel for secure access
+
 ### Home Automation Stack
 - **Home Assistant** - Home automation hub
 - **Mosquitto** - MQTT broker
@@ -147,6 +162,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 | `chimera-setup.sh` | Auto-configure media stack integrations (Sonarr↔Radarr↔Prowlarr↔Rdt-Client) |
 | `media_configurator.py` | Python tool for media stack configuration (used by chimera-setup.sh) |
 | `auto-deploy.sh` | Automated deployment of all stacks |
+| `create-ai-network.sh` | Creates the ai_grid Docker network for inter-container DNS |
 | `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
 | `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
 
@@ -156,6 +172,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 - Store secrets securely (encrypted cloud storage or password manager)
 - The `auto-deploy.sh` script supports loading secrets from a `./secrets/` directory
 - Tailscale provides encrypted VPN access without opening ports on your router
+- Cloudflare Zero Trust requires a tunnel token; rotate it if it is ever exposed
 
 ## 🎯 Access Your Services
 
@@ -163,6 +180,7 @@ After deployment, access your services at:
 - Homepage Dashboard: http://192.168.1.9:8008
 - Plex: http://192.168.1.9:32400/web
 - Open WebUI (AI): http://192.168.1.9:3000
+- n8n (Agentic Workflows): http://192.168.1.9:5678
 - Home Assistant: http://192.168.1.9:8123
 - And more! (See homepage dashboard for all links)
 

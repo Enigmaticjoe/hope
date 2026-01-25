@@ -1,0 +1,49 @@
+version: "3.8"
+services:
+  n8n:
+    image: n8n-io/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+    volumes:
+      - ${APPDATA_PATH}/n8n:/home/node/.n8n
+    ports:
+      - "${N8N_PORT}:5678"
+    networks:
+      - ai_grid
+
+  browserless:
+    image: browserless/chrome:latest
+    container_name: browserless
+    restart: unless-stopped
+    environment:
+      - TOKEN=${BROWSERLESS_TOKEN}
+      - MAX_CONCURRENT_SESSIONS=${BROWSERLESS_MAX_SESSIONS}
+      - PREBOOT_CHROME=true
+      - STEALTH_PLUGIN=true
+    ports:
+      - "${BROWSERLESS_PORT}:3000"
+    networks:
+      - ai_grid
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
+    networks:
+      - ai_grid
+
+networks:
+  ai_grid:
+    external: true
