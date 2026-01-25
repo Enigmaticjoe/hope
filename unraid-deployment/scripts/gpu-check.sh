@@ -1,24 +1,58 @@
 #!/bin/bash
-# gpu-check.sh - Validate NVIDIA GPU visibility on host and within Ollama container.
+# gpu-check.sh - Validate GPU visibility on host and within Ollama container.
 
-if ! command -v nvidia-smi &> /dev/null; then
-  echo "ERROR: nvidia-smi not found. Install Unraid NVIDIA drivers plugin and reboot."
-  exit 1
-fi
+set -euo pipefail
 
-echo "Host NVIDIA GPU status:"
-nvidia-smi
+check_nvidia() {
+  if command -v nvidia-smi &> /dev/null; then
+    echo "Host NVIDIA GPU status:"
+    nvidia-smi
 
-if docker ps --format '{{.Names}}' | grep -q "^ollama$"; then
-  runtime=$(docker inspect -f '{{.HostConfig.Runtime}}' ollama)
-  if [ "$runtime" = "nvidia" ]; then
-    echo "Ollama container is running with NVIDIA runtime. GPU should be accessible."
-  else
-    echo "WARNING: Ollama container is not using NVIDIA runtime. Check the compose config."
+    if docker ps --format '{{.Names}}' | grep -q "^ollama-nvidia$"; then
+      runtime=$(docker inspect -f '{{.HostConfig.Runtime}}' ollama-nvidia)
+      if [ "$runtime" = "nvidia" ]; then
+        echo "Ollama (NVIDIA) container is running with NVIDIA runtime. GPU should be accessible."
+      else
+        echo "WARNING: Ollama (NVIDIA) container is not using NVIDIA runtime. Check the compose config."
+      fi
+    elif docker ps --format '{{.Names}}' | grep -q "^ollama$"; then
+      echo "NOTE: ollama container is running without NVIDIA runtime."
+    else
+      echo "NOTE: Ollama container is not running. Deploy the AI stack first."
+    fi
+    return 0
   fi
-else
-  echo "NOTE: Ollama container is not running. Deploy the AI stack first."
+  return 1
+}
+
+check_rocm() {
+  if command -v rocm-smi &> /dev/null; then
+    echo "Host AMD ROCm GPU status:"
+    rocm-smi || true
+  fi
+
+  if [[ -e /dev/kfd && -e /dev/dri ]]; then
+    echo "ROCm device nodes detected: /dev/kfd and /dev/dri"
+    if docker ps --format '{{.Names}}' | grep -q "^ollama-rocm$"; then
+      echo "Ollama (ROCm) container is running."
+    elif docker ps --format '{{.Names}}' | grep -q "^ollama$"; then
+      echo "NOTE: ollama container is running without ROCm device mapping."
+    else
+      echo "NOTE: Ollama container is not running. Deploy the AI stack first."
+    fi
+    return 0
+  fi
+  return 1
+}
+
+if check_nvidia; then
+  exit 0
 fi
 
-# Optionally test an Ollama command (ensure a model is installed first):
-# docker exec ollama ollama list
+if check_rocm; then
+  exit 0
+fi
+
+echo "ERROR: No NVIDIA (nvidia-smi) or AMD ROCm (/dev/kfd) GPU support detected." >&2
+echo "Install the correct GPU drivers and reboot before deploying AI services." >&2
+exit 1

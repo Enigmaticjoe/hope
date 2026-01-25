@@ -82,3 +82,21 @@ services:
     - name: ESPHome
       url: http://192.168.1.9:6052
       icon: mdi:chip
+
+- name: Cloudflare Control Plane
+  items:
+    - name: Cloudflare Zero Trust
+      url: https://one.dash.cloudflare.com
+      icon: mdi:shield-lock
+    - name: Cloudflare DNS
+      url: https://dash.cloudflare.com
+      icon: mdi:dns
+    - name: Cloudflare Tunnels
+      url: https://dash.cloudflare.com/?to=/:account/zero-trust/access/tunnels
+      icon: mdi:cloud-outline
+    - name: Cloudflare Workers
+      url: https://dash.cloudflare.com/?to=/:account/workers
+      icon: mdi:cloud-braces
+    - name: Cloudflare R2
+      url: https://dash.cloudflare.com/?to=/:account/r2
+      icon: mdi:database

@@ -1,5 +1,6 @@
 # Unraid Smart Server Deployment Guide
 
+Welcome to your smart Unraid deployment! This guide covers the setup of Media Services, AI Tools, Infrastructure, Agentic Workflows, and Home Automation on your Unraid server (**192.168.1.9**).
 Welcome to your smart Unraid deployment! This guide covers the setup of Media Services, AI Tools, Infrastructure, Agentic Workflows, and Home Automation on your Unraid server.
 
 ## 1. Prerequisites
@@ -19,7 +20,7 @@ Match these details to your system. The stacks are GPU-aware and support both NV
 - **Plex Pass** (Required for hardware transcoding on NVIDIA).
 - **Real-Debrid** (Premium account for Zurg/Riven).
 - **Tailscale** (For secure remote access).
-- **Cloudflare** (For the Agentic stack tunnels).
+- **Cloudflare** (For the Agentic stack tunnels + Zero Trust policies).
 
 ### Networking
 * **Server IP:** `UNRAID_IP` (example: `192.168.1.222`)
@@ -38,6 +39,11 @@ cd unraid-deployment
 **Targeted stacks**
 ```bash
 ./scripts/chimera-install.sh --prepare --validate --deploy --stack media
+```
+
+**Recommended preflight:**
+```
+./scripts/preflight.sh --profile rocm
 ```
 
 ---
@@ -62,7 +68,7 @@ Deploy this first to establish the backbone and remote access.
 This sets up your "Netflix-like" streaming experience.
 
 **Configuration Notes:**
-* **Plex Transcoding:** In your `.env.media` or Docker Compose, ensure `NVIDIA_VISIBLE_DEVICES=all` is set for Plex. Inside Plex Settings > Transcoder, set "Hardware transcoding device" to the **RTX 4070**.
+* **Plex Transcoding:** Since your CPU has no iGPU, enable **hardware transcoding** for the RX 7900 XT (AMD). Ensure `/dev/dri` is passed through (set `PLEX_DRI_DEVICE=/dev/dri` in `.env.media`). In Plex Settings > Transcoder, enable hardware acceleration.
 * **Real-Debrid (Zurg):** This service mounts your Real-Debrid torrents to `/mnt/user/realdebrid`. Ensure your `RD_API_KEY` is correct in `.env.media`.
 * **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the Zurg mount or your local `downloads` share on the cache.
 
@@ -73,11 +79,15 @@ This sets up your "Netflix-like" streaming experience.
 ### c. AI Core Stack (Ollama + Open WebUI + Qdrant)
 **File:** `stacks/ai-core.yml` (NVIDIA) or `stacks/ai-core-amd.yml` (AMD ROCm)
 
-This enables your local "Sovereign AI" using the RTX 4070.
+This enables your local "Sovereign AI" using the RX 7900 XT (ROCm) or CPU fallback.
+
+**Deploy with profile:**
+```
+./scripts/auto-deploy.sh --stack ai-core --profile rocm
+```
 
 **Storage Optimization:**
-You have a dedicated NVMe partition mounted at `/mnt/qdrant` on your WD Black SN850X. This is perfect for high-speed vector retrieval.
-* **Action:** In your `.env.ai-core` or the stack YAML, ensure the Qdrant volume points to this dedicated path:
+If you want a dedicated NVMe path for Qdrant, update the volume mapping in the stack YAML to point to it:
     ```yaml
     volumes:
       - /mnt/qdrant/storage:/qdrant/storage

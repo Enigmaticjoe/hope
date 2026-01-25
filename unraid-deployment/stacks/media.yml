@@ -17,6 +17,8 @@ services:
       - ${MEDIA_PATH}/music:/music
       - ${APPDATA_PATH}/plex/transcode:/transcode
       - ${REALDEBRID_MOUNT}:/realdebrid:shared
+    devices:
+      - ${PLEX_DRI_DEVICE:-/dev/dri}:/dev/dri
     ports:
       - "32400:32400/tcp"
       - "32469:32469/tcp"

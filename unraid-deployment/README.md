@@ -6,8 +6,8 @@ Complete, modular deployment files for a fully-featured Unraid smart home server
 
 ### 1. Prerequisites
 - Unraid server with Docker support
-- NVIDIA GPU drivers installed (for AI features)
-- Accounts: Plex Pass, Real-Debrid, Tailscale
+- GPU drivers for your accelerator (NVIDIA or AMD ROCm) if you plan to run AI locally
+- Accounts: Plex Pass, Real-Debrid, Tailscale, Cloudflare (for tunnels)
 
 ### 2. Setup Environment Files
 Copy and customize the environment templates:
@@ -23,7 +23,12 @@ cp env-templates/.env.agentic .env.agentic
 
 Edit each `.env.*` file with your specific values (API keys, paths, etc.)
 
-### 3. Deploy the Stacks
+### 3. Run Preflight Checks
+```bash
+./scripts/preflight.sh --profile rocm
+```
+
+### 4. Deploy the Stacks
 
 #### Recommended: Chimera Install Orchestrator
 The fastest, most automated path. This will:
@@ -51,6 +56,18 @@ cd unraid-deployment
 ./scripts/auto-deploy.sh
 ```
 
+**AI profile selection:**
+```bash
+# CPU-only
+./scripts/auto-deploy.sh --stack ai-core --profile cpu
+
+# NVIDIA GPU
+./scripts/auto-deploy.sh --stack ai-core --profile nvidia
+
+# AMD ROCm GPU
+./scripts/auto-deploy.sh --stack ai-core --profile rocm
+```
+
 #### Option B: Using Portainer
 1. Open Portainer web UI (http://your-unraid-ip:9000)
 2. Create a new stack for each YAML file in `stacks/`
@@ -67,8 +84,10 @@ docker compose -f infrastructure.yml --env-file ../.env.infrastructure up -d
 # Deploy media stack
 docker compose -f media.yml --env-file ../.env.media up -d
 
-# Deploy AI core stack
-docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
+# Deploy AI core stack (select a profile)
+COMPOSE_PROFILES=cpu docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
+# COMPOSE_PROFILES=nvidia docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
+# COMPOSE_PROFILES=rocm docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
 
 # Deploy home automation stack
 docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
@@ -77,7 +96,7 @@ docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
 docker compose -f agentic.yml --env-file ../.env.agentic up -d
 ```
 
-### 4. Auto-Configure Media Stack (Recommended)
+### 5. Auto-Configure Media Stack (Recommended)
 After deploying the media stack, run the Chimera configurator to automatically wire everything together.
 
 **Three deployment options:**
@@ -116,17 +135,11 @@ This automatically configures:
 
 See **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** for full deployment guide.
 
-### 5. Configure Homepage Dashboard
+### 6. Configure Homepage Dashboard
 Copy the dashboard configuration to your Homepage appdata folder:
 ```bash
 cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ```
-
-### 6. Cloudflare Zero Trust / Tunnel (Optional)
-If you use Cloudflare Tunnel for secure external access:
-- Set `CF_TUNNEL_TOKEN` in `.env.agentic`
-- Add your routes in Cloudflare Zero Trust
-- (Optional) Use the local ingress template in `configs/cloudflared-ingress.yml`
 
 ### 7. Verify GPU Support (for AI stack)
 ```bash
@@ -177,7 +190,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 - **[UNRAID-DEPLOYMENT.md](./UNRAID-DEPLOYMENT.md)** - Comprehensive deployment guide
 - **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** - Media stack auto-configuration (User Scripts, Portainer, CLI)
 - **[AGENTIC-BIDDING.md](./AGENTIC-BIDDING.md)** - Agentic bidding workflow + Zero Trust ingress
-- **[CHEATSHEETS.md](./CHEATSHEETS.md)** - Prompts, settings, and service cheat sheets
+- **[CHIMERA-OPS.md](./CHIMERA-OPS.md)** - Ops runbook, prompts, and service cheat sheets
 
 ## 🛠 Utility Scripts
 
@@ -185,9 +198,10 @@ For complete setup instructions, configuration details, and troubleshooting:
 |--------|---------|
 | `chimera-setup.sh` | Auto-configure media stack integrations (Sonarr↔Radarr↔Prowlarr↔Rdt-Client) |
 | `media_configurator.py` | Python tool for media stack configuration (used by chimera-setup.sh) |
-| `auto-deploy.sh` | Automated deployment of all stacks |
-| `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
-| `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
+| `auto-deploy.sh` | Automated deployment of all stacks (supports profiles and single-stack mode) |
+| `preflight.sh` | Validates docker socket access, env files, ports, DNS, and GPU profile |
+| `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories (requires --force) |
+| `gpu-check.sh` | Verify NVIDIA/AMD GPU support for AI services |
 | `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
 | `chimera-install.sh` | End-to-end installer (prepare → validate → deploy → configure) |
 
