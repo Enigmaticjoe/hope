@@ -43,7 +43,7 @@ render_env_file() {
     if [[ -z "${value}" ]]; then
       value="${default}"
     fi
-    echo "${key}=${value}" >> "${tmp_file}"
+    echo "${key}=\"${value}\"" >> "${tmp_file}"
   done < "${template_file}"
 
   mv "${tmp_file}" "${target_file}"
