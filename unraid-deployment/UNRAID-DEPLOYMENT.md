@@ -16,7 +16,7 @@ Match these details to your system. The stacks are GPU-aware and support both NV
 **Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the matching driver plugin is installed and GPU is visible in `nvidia-smi` (NVIDIA) or `rocm-smi` (AMD).
 
 ### Accounts/Subscriptions
-- **Plex Pass** (Required for hardware transcoding on NVIDIA).
+- **Plex Pass** (Required for hardware transcoding).
 - **Real-Debrid** (Premium account for Zurg/Riven).
 - **Tailscale** (For secure remote access).
 - **Cloudflare** (For the Agentic stack tunnels + Zero Trust policies).
@@ -55,6 +55,9 @@ cd unraid-deployment
 Deploy this first to establish the backbone and remote access.
 1.  **Tailscale:** Connects your server to your private VPN mesh.
 2.  **Homepage:** Your central dashboard.
+3.  **Unraid API:** Provides programmatic access to My Servers (used by automation + monitoring).
+
+**Required:** Set `UNRAID_API_KEY` in `.env.infrastructure` before deploying.
 
 **Post-Deploy:**
 * Log into Tailscale Admin and approve the `unraid` node.
