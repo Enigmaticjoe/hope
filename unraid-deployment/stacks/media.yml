@@ -118,6 +118,20 @@ services:
     ports:
       - "8181:8181"
 
+  rdt-client:
+    image: ghcr.io/rogerfar/rdt-client:latest
+    container_name: rdt-client
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${APPDATA_PATH}/rdt-client:/data/db
+      - ${MEDIA_PATH}/downloads:/data/downloads
+    ports:
+      - "6500:6500"
+
   zurg:
     image: iampuid0/pd_zurg:latest
     container_name: zurg

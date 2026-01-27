@@ -128,14 +128,25 @@ check_compose() {
 check_ports() {
   require_command ss
   require_command rg
+  local homepage_port="${HOMEPAGE_PORT:-8008}"
+  local browserless_port="${BROWSERLESS_PORT:-3005}"
   local ports=(
-    8008 9000 3010 9999
-    32400 8989 7878 9696 5055 6767 8181 9090
+    "${homepage_port}" 3010 9999
     11434 3000 6333
-    8123 1880 8080 6052
-    5678
+    32400 32469 1900 32410 32412 32413 32414
+    8989 7878 9696 6767 5055 8181 9090 6500
+    8123 1880 1883 8080 6052
+    5678 "${browserless_port}"
   )
+  declare -A seen=()
   for port in "${ports[@]}"; do
+    if [[ -z "${port}" ]]; then
+      continue
+    fi
+    if [[ -n "${seen[${port}]:-}" ]]; then
+      continue
+    fi
+    seen["${port}"]=1
     if ss -tulpn | rg -q ":${port}\\b"; then
       echo "Port ${port} is already in use. Resolve conflicts before deployment." >&2
       exit 1
