@@ -74,15 +74,26 @@ ensure_appdata_paths() {
 }
 
 check_ports() {
+  local homepage_port="${HOMEPAGE_PORT:-8008}"
+  local browserless_port="${BROWSERLESS_PORT:-3005}"
   local ports=(
-    8000 8008 9000 3010 9999
-    3000 3001 6333 8888 10200 10300 11434
-    32400 8989 7878 9696 5055 6767 8181 9090
+    "${homepage_port}" 3010 9999
+    11434 3000 6333
+    32400 32469 1900 32410 32412 32413 32414
+    8989 7878 9696 6767 5055 8181 9090 6500
     8123 1880 1883 8080 6052
-    5678
+    5678 "${browserless_port}"
   )
+  declare -A seen=()
   local in_use=0
   for port in "${ports[@]}"; do
+    if [[ -z "${port}" ]]; then
+      continue
+    fi
+    if [[ -n "${seen[${port}]:-}" ]]; then
+      continue
+    fi
+    seen["${port}"]=1
     if command -v ss >/dev/null 2>&1; then
       if ss -tulpn | rg -q ":${port}\\b"; then
         echo "Port ${port} is already in use." >&2
