@@ -13,7 +13,7 @@ set +a
 
 usage() {
   cat <<'EOF'
-Usage: preflight.sh [--profile cpu|nvidia|rocm]
+Usage: preflight.sh [--profile cpu|nvidia]
 
 Validates docker socket access, env files, appdata paths, port conflicts, and DNS.
 EOF
@@ -74,24 +74,43 @@ ensure_appdata_paths() {
 }
 
 check_ports() {
+  local homepage_port="${HOMEPAGE_PORT:-8008}"
+  local browserless_port="${BROWSERLESS_PORT:-3005}"
   local ports=(
-    8000 8008 9000 3010 9999
-    3000 3001 6333 8888 10200 10300 11434
-    32400 8989 7878 9696 5055 6767 8181 9090
+    8000 9000 "${homepage_port}" 3010 9999
+    11434 3000 6333
+    32400 32469 1900 32410 32412 32413 32414
+    8989 7878 9696 6767 5055 8181 9090 6500
     8123 1880 1883 8080 6052
-    5678
+    5678 "${browserless_port}"
   )
+  declare -A seen=()
   local in_use=0
   for port in "${ports[@]}"; do
+    if [[ -z "${port}" ]]; then
+      continue
+    fi
+    if [[ -n "${seen[${port}]:-}" ]]; then
+      continue
+    fi
+    seen["${port}"]=1
     if command -v ss >/dev/null 2>&1; then
       if ss -tulpn | rg -q ":${port}\\b"; then
-        echo "Port ${port} is already in use." >&2
-        in_use=1
+        if [[ "${port}" == "9000" ]]; then
+          echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
+        else
+          echo "Port ${port} is already in use." >&2
+          in_use=1
+        fi
       fi
     elif command -v lsof >/dev/null 2>&1; then
       if lsof -i ":${port}" >/dev/null 2>&1; then
-        echo "Port ${port} is already in use." >&2
-        in_use=1
+        if [[ "${port}" == "9000" ]]; then
+          echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
+        else
+          echo "Port ${port} is already in use." >&2
+          in_use=1
+        fi
       fi
     else
       echo "WARN: Neither ss nor lsof is available for port checks." >&2
@@ -118,14 +137,6 @@ check_gpu() {
   if [[ "$PROFILE" == "nvidia" ]]; then
     if ! command -v nvidia-smi >/dev/null 2>&1; then
       echo "WARN: nvidia-smi not found. NVIDIA profile may fail." >&2
-    fi
-  fi
-  if [[ "$PROFILE" == "rocm" ]]; then
-    if [[ ! -e /dev/kfd ]]; then
-      echo "WARN: /dev/kfd not found. ROCm profile may fail." >&2
-    fi
-    if [[ ! -e /dev/dri ]]; then
-      echo "WARN: /dev/dri not found. ROCm profile may fail." >&2
     fi
   fi
 }

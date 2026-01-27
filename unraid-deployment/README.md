@@ -2,18 +2,24 @@
 
 Complete, modular deployment files for a fully-featured Unraid smart home server with Media Services, AI Tools, Infrastructure, and Home Automation.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Unraid + Portainer First)
 
-### 1. Prerequisites
-- Unraid server with Docker support
-- GPU drivers for your accelerator (NVIDIA or AMD ROCm) if you plan to run AI locally
-- Accounts: Plex Pass, Real-Debrid, Tailscale, Cloudflare (for tunnels)
+### 1. Prerequisites (Fresh Docker)
+- **Unraid 6.12+** with Docker enabled.
+- **Portainer CE** installed from Apps (this is your primary deployment control plane).
+- **User Scripts plugin** installed from Apps (used for post-deploy automation).
+- NVIDIA drivers installed for the RTX 4070 if you plan to run AI locally.
+- Accounts: Plex Pass, Real-Debrid, Tailscale, Cloudflare (for tunnels).
 
-### 2. Setup Environment Files
-Copy and customize the environment templates:
-
+### 2. Generate `.env` Files (Interactive Wizard)
+Use the wizard to prompt through every required variable:
 ```bash
 cd unraid-deployment
+./scripts/env-wizard.sh
+```
+
+If you prefer manual setup, copy from templates:
+```bash
 cp env-templates/.env.infrastructure .env.infrastructure
 cp env-templates/.env.media .env.media
 cp env-templates/.env.ai-core .env.ai-core
@@ -21,82 +27,40 @@ cp env-templates/.env.home-automation .env.home-automation
 cp env-templates/.env.agentic .env.agentic
 ```
 
-Edit each `.env.*` file with your specific values (API keys, paths, etc.)
-
-### 3. Run Preflight Checks
+### 3. Preflight (Ports + Docker Socket + DNS)
 ```bash
-./scripts/preflight.sh --profile rocm
+./scripts/preflight.sh --profile nvidia
 ```
 
-### 4. Deploy the Stacks
+### 4. Deploy with Portainer (Priority Path)
+1. Open **Portainer** → Stacks → **Add stack**
+2. Create stacks from the files in `stacks/` with the matching `.env.*` file:
+   - `infrastructure.yml` → `.env.infrastructure`
+   - `media.yml` → `.env.media`
+   - `ai-core.yml` → `.env.ai-core` (use profile selection in Portainer)
+   - `home-automation.yml` → `.env.home-automation`
+   - `agentic.yml` → `.env.agentic`
+3. Deploy in order: **infrastructure → media → ai-core → home-automation → agentic**.
 
-#### Recommended: Chimera Install Orchestrator
-The fastest, most automated path. This will:
-- Copy missing `.env` templates
-- Validate prerequisites, ports, and docker access
-- Create appdata directories
-- Deploy all stacks
-- Run media auto-configuration
-- Bootstrap the agentic network
-
+### 5. Post-Deploy (User Scripts)
+Use the User Scripts plugin to run the Chimera media configurator:
 ```bash
-cd unraid-deployment
+mkdir -p /boot/config/plugins/user.scripts/scripts/chimera-configurator
+mkdir -p /boot/config/plugins/chimera
+cp user-scripts/chimera-configurator/* /boot/config/plugins/user.scripts/scripts/chimera-configurator/
+cp user-scripts/chimera-configurator/media_configurator.py /boot/config/plugins/chimera/
+chmod +x /boot/config/plugins/user.scripts/scripts/chimera-configurator/script
+chmod +x /boot/config/plugins/chimera/media_configurator.py
+```
+Then go to **Settings → User Scripts** and run **Chimera Media Stack Configurator**.
+
+### 6. Optional: CLI Automation (If You Want It)
+The scripted path is available, but Portainer remains the primary control plane:
+```bash
 ./scripts/chimera-install.sh --all
 ```
 
-Target a single stack or run dry runs:
-```bash
-./scripts/chimera-install.sh --prepare --validate --deploy --stack media
-./scripts/chimera-install.sh --dry-run --all
-```
-
-#### Option A: Using the Auto-Deploy Script
-```bash
-cd unraid-deployment
-./scripts/auto-deploy.sh
-```
-
-**AI profile selection:**
-```bash
-# CPU-only
-./scripts/auto-deploy.sh --stack ai-core --profile cpu
-
-# NVIDIA GPU
-./scripts/auto-deploy.sh --stack ai-core --profile nvidia
-
-# AMD ROCm GPU
-./scripts/auto-deploy.sh --stack ai-core --profile rocm
-```
-
-#### Option B: Using Portainer
-1. Open Portainer web UI (http://your-unraid-ip:9000)
-2. Create a new stack for each YAML file in `stacks/`
-3. Upload the corresponding `.env` file for each stack
-4. Deploy in order: infrastructure → media → ai-core → home-automation → agentic
-
-#### Option C: Using Docker Compose
-```bash
-cd unraid-deployment/stacks
-
-# Deploy infrastructure stack
-docker compose -f infrastructure.yml --env-file ../.env.infrastructure up -d
-
-# Deploy media stack
-docker compose -f media.yml --env-file ../.env.media up -d
-
-# Deploy AI core stack (select a profile)
-COMPOSE_PROFILES=cpu docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
-# COMPOSE_PROFILES=nvidia docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
-# COMPOSE_PROFILES=rocm docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
-
-# Deploy home automation stack
-docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
-
-# Deploy agentic stack
-docker compose -f agentic.yml --env-file ../.env.agentic up -d
-```
-
-### 5. Auto-Configure Media Stack (Recommended)
+### 7. Auto-Configure Media Stack (Recommended)
 After deploying the media stack, run the Chimera configurator to automatically wire everything together.
 
 **Three deployment options:**
@@ -135,13 +99,13 @@ This automatically configures:
 
 See **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** for full deployment guide.
 
-### 6. Configure Homepage Dashboard
+### 8. Configure Homepage Dashboard
 Copy the dashboard configuration to your Homepage appdata folder:
 ```bash
 cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ```
 
-### 7. Verify GPU Support (for AI stack)
+### 9. Verify GPU Support (for AI stack)
 ```bash
 ./scripts/gpu-check.sh
 ```
@@ -163,6 +127,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Bazarr** - Subtitle management
 - **Overseerr** - Media requests
 - **Tautulli** - Plex analytics
+- **Rdt-Client** - Real-Debrid download client
 - **Zurg** - Real-Debrid integration
 
 ### AI Core Stack
@@ -170,7 +135,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
 
-**AMD ROCm option:** Use `stacks/ai-core-amd.yml` with `/dev/kfd` + `/dev/dri` passthrough and `HSA_OVERRIDE_GFX_VERSION` configured in `.env.ai-core`.
+**NVIDIA RTX 4070:** Use the `nvidia` profile in Portainer or set `AI_CORE_PROFILE=nvidia` in `.env.ai-core`.
 
 ### Home Automation Stack
 - **Home Assistant** - Home automation hub
@@ -201,7 +166,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 | `auto-deploy.sh` | Automated deployment of all stacks (supports profiles and single-stack mode) |
 | `preflight.sh` | Validates docker socket access, env files, ports, DNS, and GPU profile |
 | `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories (requires --force) |
-| `gpu-check.sh` | Verify NVIDIA/AMD GPU support for AI services |
+| `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
 | `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
 | `chimera-install.sh` | End-to-end installer (prepare → validate → deploy → configure) |
 

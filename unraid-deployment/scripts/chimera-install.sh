@@ -30,7 +30,7 @@ Options:
   --deploy              Deploy docker compose stacks.
   --configure           Run media auto-configurator after deploy.
   --bootstrap           Run agentic bootstrap (ai_grid network + port checks).
-  --stack <name>        Deploy only one stack (infrastructure|media|ai-core|ai-core-amd|home-automation|agentic).
+  --stack <name>        Deploy only one stack (infrastructure|media|ai-core|home-automation|agentic).
   --dry-run             Show commands without executing them.
   -h, --help            Show this help.
 
@@ -128,17 +128,32 @@ check_compose() {
 check_ports() {
   require_command ss
   require_command rg
+  local homepage_port="${HOMEPAGE_PORT:-8008}"
+  local browserless_port="${BROWSERLESS_PORT:-3005}"
   local ports=(
-    8008 9000 3010 9999
-    32400 8989 7878 9696 5055 6767 8181 9090
+    8000 9000 "${homepage_port}" 3010 9999
     11434 3000 6333
-    8123 1880 8080 6052
-    5678
+    32400 32469 1900 32410 32412 32413 32414
+    8989 7878 9696 6767 5055 8181 9090 6500
+    8123 1880 1883 8080 6052
+    5678 "${browserless_port}"
   )
+  declare -A seen=()
   for port in "${ports[@]}"; do
+    if [[ -z "${port}" ]]; then
+      continue
+    fi
+    if [[ -n "${seen[${port}]:-}" ]]; then
+      continue
+    fi
+    seen["${port}"]=1
     if ss -tulpn | rg -q ":${port}\\b"; then
-      echo "Port ${port} is already in use. Resolve conflicts before deployment." >&2
-      exit 1
+      if [[ "${port}" == "9000" ]]; then
+        echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
+      else
+        echo "Port ${port} is already in use. Resolve conflicts before deployment." >&2
+        exit 1
+      fi
     fi
   done
 }
@@ -165,8 +180,9 @@ deploy_stack() {
   local stack=$1
   local stack_file="${STACKS_DIR}/${stack}.yml"
   local env_file="${ROOT_DIR}/.env.${stack}"
-  if [[ "${stack}" == "ai-core-amd" ]]; then
-    env_file="${ROOT_DIR}/.env.ai-core"
+  local compose_profiles=""
+  if [[ "${stack}" == "ai-core" ]]; then
+    compose_profiles="${AI_CORE_PROFILE:-nvidia}"
   fi
   if [[ ! -f "${stack_file}" ]]; then
     echo "Missing stack file: ${stack_file}" >&2
@@ -176,9 +192,15 @@ deploy_stack() {
     echo "Missing env file: ${env_file}" >&2
     exit 1
   fi
-  log "DEPLOY" "Deploying ${stack}"
-  run_cmd docker compose -f "${stack_file}" --env-file "${env_file}" pull
-  run_cmd docker compose -f "${stack_file}" --env-file "${env_file}" up -d
+  if [[ -n "${compose_profiles}" ]]; then
+    log "DEPLOY" "Deploying ${stack} (profile: ${compose_profiles})"
+    run_cmd env COMPOSE_PROFILES="${compose_profiles}" docker compose -f "${stack_file}" --env-file "${env_file}" pull
+    run_cmd env COMPOSE_PROFILES="${compose_profiles}" docker compose -f "${stack_file}" --env-file "${env_file}" up -d
+  else
+    log "DEPLOY" "Deploying ${stack}"
+    run_cmd docker compose -f "${stack_file}" --env-file "${env_file}" pull
+    run_cmd docker compose -f "${stack_file}" --env-file "${env_file}" up -d
+  fi
 }
 
 run_configurator() {

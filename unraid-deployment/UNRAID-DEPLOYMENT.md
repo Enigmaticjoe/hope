@@ -1,20 +1,19 @@
 # Unraid Smart Server Deployment Guide
 
-Welcome to your smart Unraid deployment! This guide covers the setup of Media Services, AI Tools, Infrastructure, Agentic Workflows, and Home Automation on your Unraid server (**192.168.1.9**).
-Welcome to your smart Unraid deployment! This guide covers the setup of Media Services, AI Tools, Infrastructure, Agentic Workflows, and Home Automation on your Unraid server.
+Operator priority: **Unraid-native**, **Portainer-first**, **User Scripts for automation**. This guide assumes your Docker environment is fresh and nothing is installed yet.
 
 ## 1. Prerequisites
 
 ### Unraid & Hardware
-Match these details to your system. The stacks are GPU-aware and support both NVIDIA and AMD workflows (ROCm for AI, NVENC/AMF for media).
+Match these details to your system. This Unraid deployment is **NVIDIA-only** for GPU workloads (RTX 4070).
 * **CPU:** Verify if you have iGPU QuickSync (Intel non-F SKU) or must use a discrete GPU.
-* **GPU:** NVIDIA or AMD supported.
+* **GPU:** NVIDIA RTX 4070 (containerized workloads).
 * **RAM:** 64 GB+ recommended for AI workloads.
 * **Storage:**
     * Cache: `/mnt/cache`
     * Vector DB: `/mnt/qdrant` (or an NVMe mount)
 
-**Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the matching driver plugin is installed and GPU is visible in `nvidia-smi` (NVIDIA) or `rocm-smi` (AMD).
+**Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the NVIDIA driver plugin is installed and the RTX 4070 is visible in `nvidia-smi`.
 
 ### Accounts/Subscriptions
 - **Plex Pass** (Required for hardware transcoding on NVIDIA).
@@ -27,28 +26,28 @@ Match these details to your system. The stacks are GPU-aware and support both NV
 * **Gateway:** `192.168.1.1` (example)
 * **Subnet:** `192.168.1.0/24`
 
-### Portainer or Docker Compose
-The provided installer supports a fully automated path. Ensure you have filled out the `.env` files in `env-templates/` and renamed them to `.env.infrastructure`, `.env.media`, etc.
+### Deployment Control Plane (Portainer First)
+All stacks are designed for **Portainer** on Unraid. Portainer is the primary deployment method; CLI scripts are optional automation accelerators.
 
-**Recommended (Automated)**
-```bash
-cd unraid-deployment
-./scripts/chimera-install.sh --all
-```
-
-**Targeted stacks**
-```bash
-./scripts/chimera-install.sh --prepare --validate --deploy --stack media
-```
+**Required:**
+1. Install **Portainer CE** from Unraid Apps.
+2. Install **User Scripts** plugin from Unraid Apps.
+3. Enable Docker and confirm `/var/run/docker.sock` exists.
 
 **Recommended preflight:**
+```bash
+cd unraid-deployment
+./scripts/preflight.sh --profile nvidia
 ```
-./scripts/preflight.sh --profile rocm
+
+**Generate `.env` files (interactive):**
+```bash
+./scripts/env-wizard.sh
 ```
 
 ---
 
-## 2. Deployment Order
+## 2. Deployment Order (Portainer)
 
 ### a. Infrastructure Stack (Core services + Tailscale)
 **File:** `stacks/infrastructure.yml`
@@ -68,8 +67,9 @@ Deploy this first to establish the backbone and remote access.
 This sets up your "Netflix-like" streaming experience.
 
 **Configuration Notes:**
-* **Plex Transcoding:** Since your CPU has no iGPU, enable **hardware transcoding** for the RX 7900 XT (AMD). Ensure `/dev/dri` is passed through (set `PLEX_DRI_DEVICE=/dev/dri` in `.env.media`). In Plex Settings > Transcoder, enable hardware acceleration.
+* **Plex Transcoding:** Since your CPU has no iGPU, enable **hardware transcoding** for the RTX 4070. Ensure `/dev/dri` is passed through (set `PLEX_DRI_DEVICE=/dev/dri` in `.env.media`). In Plex Settings > Transcoder, enable hardware acceleration.
 * **Real-Debrid (Zurg):** This service mounts your Real-Debrid torrents to `/mnt/user/realdebrid`. Ensure your `RD_API_KEY` is correct in `.env.media`.
+* **Rdt-Client:** Runs on `:6500` and is used as the Real-Debrid download client for Sonarr/Radarr.
 * **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the Zurg mount or your local `downloads` share on the cache.
 
 **Verify:**
@@ -77,13 +77,13 @@ This sets up your "Netflix-like" streaming experience.
 * **Overseerr:** `http://UNRAID_IP:5055` (Request hub)
 
 ### c. AI Core Stack (Ollama + Open WebUI + Qdrant)
-**File:** `stacks/ai-core.yml` (NVIDIA) or `stacks/ai-core-amd.yml` (AMD ROCm)
+**File:** `stacks/ai-core.yml` (NVIDIA)
 
-This enables your local "Sovereign AI" using the RX 7900 XT (ROCm) or CPU fallback.
+This enables your local "Sovereign AI" using the RTX 4070 (NVIDIA) or CPU fallback.
 
 **Deploy with profile:**
 ```
-./scripts/auto-deploy.sh --stack ai-core --profile rocm
+./scripts/auto-deploy.sh --stack ai-core --profile nvidia
 ```
 
 **Storage Optimization:**
@@ -94,7 +94,7 @@ If you want a dedicated NVMe path for Qdrant, update the volume mapping in the s
     ```
 
 **Services:**
-* **Ollama (Brain):** Running on port `11434`. On AMD, use the ROCm image and set `HSA_OVERRIDE_GFX_VERSION=11.0.0` in `.env.ai-core`.
+* **Ollama (Brain):** Running on port `11434`. For Unraid, use the NVIDIA profile and confirm `nvidia-smi` works.
 * **Open WebUI (Chat):** `http://UNRAID_IP:3000`. Connects to Ollama and Qdrant for RAG (chatting with your docs).
 
 ### d. Agentic Stack (n8n + Browserless + Cloudflare)
@@ -121,7 +121,7 @@ This stack powers your automated bidding and web scraping workflows.
 ## 3. Post-Deployment Checklist
 
 1.  **Check GPU Usage:**
-    Run `watch nvidia-smi` (NVIDIA) or `watch rocm-smi` (AMD) in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
+    Run `watch nvidia-smi` in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
 2.  **Backups:**
     Your AppData is on `/mnt/cache` (Samsung 990 EVO). Ensure the **Appdata Backup** plugin is installed and scheduled to back up to the Array (HDD) weekly.
 3.  **Security:**
@@ -141,4 +141,44 @@ See **[CHEATSHEETS.md](./CHEATSHEETS.md)** for:
 - Service configuration checklists
 - Voice/assistant integration notes
 
-Enjoy your new high-performance homelab!
+---
+
+## Port Reference (Conflict Check)
+Use this list if you need to reassign ports before deployment:
+
+**Infrastructure**
+- Homepage: `${HOMEPAGE_PORT:-8008}`
+- Portainer: `9000` / `9443` (Portainer default)
+- Uptime Kuma: `3010`
+- Dozzle: `9999`
+
+**Media**
+- Plex: `32400`, `32469`, `1900/udp`, `32410-32414/udp`
+- Sonarr: `8989`
+- Radarr: `7878`
+- Prowlarr: `9696`
+- Bazarr: `6767`
+- Overseerr: `5055`
+- Tautulli: `8181`
+- Rdt-Client: `6500`
+- Zurg: `9090`
+
+**AI Core**
+- Ollama: `11434`
+- Open WebUI: `3000`
+- Qdrant: `6333`
+
+**Agentic**
+- n8n: `5678`
+- Browserless: `${BROWSERLESS_PORT:-3005}`
+
+**Home Automation**
+- Home Assistant: `8123`
+- Mosquitto: `1883`
+- Node-RED: `1880`
+- Zigbee2MQTT: `8080`
+- ESPHome: `6052`
+
+Deploy clean or fix conflicts before you launch stacks.
+
+Enjoy your new high-performance homelab.

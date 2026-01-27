@@ -10,7 +10,7 @@ This guide wires a local, sovereign agentic workflow on Unraid using **n8n + Bro
   - **Unraid**: use the existing `ai-core` stack (Ollama + Open WebUI). 
   - **Brain (Pop!_OS)**: keep Ollama/vLLM on the Brain and expose it over LAN.
 
-> **AMD GPU note (Brain):** Ollama should use `ollama/ollama:rocm` with `/dev/kfd` + `/dev/dri` mappings and `HSA_OVERRIDE_GFX_VERSION=11.0.0` for RDNA3. 
+> **Brain GPU note:** The Brain stack can run on its own GPU/host. This Unraid deployment assumes an RTX 4070 with NVIDIA runtime for containers.
 
 ## 2) Create the dedicated AI network
 

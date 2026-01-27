@@ -28,23 +28,6 @@ services:
     ports:
       - "11434:11434"
 
-  ollama-rocm:
-    image: ollama/ollama:rocm
-    container_name: ollama-rocm
-    restart: unless-stopped
-    profiles:
-      - rocm
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    environment:
-      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION:-11.0.0}
-      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-5m}
-    volumes:
-      - ${APPDATA_PATH}/ollama:/root/.ollama
-    ports:
-      - "11434:11434"
-
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: openwebui
