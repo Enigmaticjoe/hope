@@ -31,7 +31,7 @@ Usage: $0 [options]
 
 Options:
   --stack <name>       Deploy a single stack (infrastructure|media|ai-core|home-automation|agentic)
-  --profile <name>     Compose profile for ai-core (cpu|nvidia|rocm)
+  --profile <name>     Compose profile for ai-core (cpu|nvidia)
   --skip-pull          Skip docker image pulls
   --dry-run            Print the docker compose commands without running them
   --configure          Run chimera-setup.sh --auto after deployment
@@ -87,6 +87,14 @@ if [[ -n "$ONLY_STACK" ]]; then
   STACKS=("${ONLY_STACK}")
 fi
 
+if [[ -z "${PROFILE}" && -n "${AI_CORE_PROFILE:-}" ]]; then
+  PROFILE="${AI_CORE_PROFILE}"
+fi
+
+if [[ -z "${PROFILE}" ]]; then
+  PROFILE="nvidia"
+fi
+
 if [[ "$SKIP_PREFLIGHT" -eq 0 ]]; then
   if [[ -f "$SCRIPT_DIR/preflight.sh" ]]; then
     "$SCRIPT_DIR/preflight.sh" ${PROFILE:+--profile "$PROFILE"}
@@ -137,8 +145,8 @@ docker compose -f "${STACKS_DIR}/infrastructure.yml" --env-file "${ROOT_DIR}/.en
 echo "Deploying media stack..."
 docker compose -f "${STACKS_DIR}/media.yml" --env-file "${ROOT_DIR}/.env.media" up -d
 
-echo "Deploying AI core stack..."
-docker compose -f "${STACKS_DIR}/ai-core.yml" --env-file "${ROOT_DIR}/.env.ai-core" up -d
+echo "Deploying AI core stack (profile: ${PROFILE})..."
+COMPOSE_PROFILES="${PROFILE}" docker compose -f "${STACKS_DIR}/ai-core.yml" --env-file "${ROOT_DIR}/.env.ai-core" up -d
 
 echo "Deploying home automation stack..."
 docker compose -f "${STACKS_DIR}/home-automation.yml" --env-file "${ROOT_DIR}/.env.home-automation" up -d

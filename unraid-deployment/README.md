@@ -141,7 +141,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
 
-**AMD ROCm option:** Use `stacks/ai-core-amd.yml` with `/dev/kfd` + `/dev/dri` passthrough and `HSA_OVERRIDE_GFX_VERSION` configured in `.env.ai-core`.
+**NVIDIA RTX 4070:** Use the `nvidia` profile in Portainer or set `AI_CORE_PROFILE=nvidia` in `.env.ai-core`.
 
 ### Home Automation Stack
 - **Home Assistant** - Home automation hub

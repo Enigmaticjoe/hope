@@ -14,10 +14,10 @@ cp env-templates/.env.home-automation .env.home-automation
 cp env-templates/.env.agentic .env.agentic
 
 # 2) Preflight checks
-./scripts/preflight.sh --profile rocm
+./scripts/preflight.sh --profile nvidia
 
 # 3) Deploy everything
-./scripts/auto-deploy.sh --profile rocm
+./scripts/auto-deploy.sh --profile nvidia
 
 # 4) Auto-configure media stack
 ./scripts/chimera-setup.sh --auto
@@ -28,7 +28,7 @@ cp env-templates/.env.agentic .env.agentic
 
 1. **Preflight validation**
    ```bash
-   ./scripts/preflight.sh --profile rocm
+   ./scripts/preflight.sh --profile nvidia
    ```
 2. **Docker config sanity**
    ```bash
@@ -162,5 +162,4 @@ Use Open WebUI Knowledge + Qdrant to ingest docs, PDFs, or logs.
 ## 8) Troubleshooting Fast Hits
 - **Container won't start:** check docker socket permissions and port collisions, then confirm appdata paths exist.
 - **DNS lookup fails:** update `/etc/resolv.conf` to `1.1.1.1`/`8.8.8.8` (systemd-resolved stub is hostile).
-- **ROCm errors:** confirm `/dev/kfd` + `/dev/dri`, set `HSA_OVERRIDE_GFX_VERSION=11.0.0`.
-
+- **NVIDIA errors:** confirm the driver plugin is installed and `nvidia-smi` reports the RTX 4070.

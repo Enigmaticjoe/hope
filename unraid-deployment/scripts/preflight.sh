@@ -13,7 +13,7 @@ set +a
 
 usage() {
   cat <<'EOF'
-Usage: preflight.sh [--profile cpu|nvidia|rocm]
+Usage: preflight.sh [--profile cpu|nvidia]
 
 Validates docker socket access, env files, appdata paths, port conflicts, and DNS.
 EOF
@@ -96,13 +96,21 @@ check_ports() {
     seen["${port}"]=1
     if command -v ss >/dev/null 2>&1; then
       if ss -tulpn | rg -q ":${port}\\b"; then
-        echo "Port ${port} is already in use." >&2
-        in_use=1
+        if [[ "${port}" == "9000" ]]; then
+          echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
+        else
+          echo "Port ${port} is already in use." >&2
+          in_use=1
+        fi
       fi
     elif command -v lsof >/dev/null 2>&1; then
       if lsof -i ":${port}" >/dev/null 2>&1; then
-        echo "Port ${port} is already in use." >&2
-        in_use=1
+        if [[ "${port}" == "9000" ]]; then
+          echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
+        else
+          echo "Port ${port} is already in use." >&2
+          in_use=1
+        fi
       fi
     else
       echo "WARN: Neither ss nor lsof is available for port checks." >&2
@@ -129,14 +137,6 @@ check_gpu() {
   if [[ "$PROFILE" == "nvidia" ]]; then
     if ! command -v nvidia-smi >/dev/null 2>&1; then
       echo "WARN: nvidia-smi not found. NVIDIA profile may fail." >&2
-    fi
-  fi
-  if [[ "$PROFILE" == "rocm" ]]; then
-    if [[ ! -e /dev/kfd ]]; then
-      echo "WARN: /dev/kfd not found. ROCm profile may fail." >&2
-    fi
-    if [[ ! -e /dev/dri ]]; then
-      echo "WARN: /dev/dri not found. ROCm profile may fail." >&2
     fi
   fi
 }

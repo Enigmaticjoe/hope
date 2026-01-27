@@ -5,15 +5,15 @@ Operator priority: **Unraid-native**, **Portainer-first**, **User Scripts for au
 ## 1. Prerequisites
 
 ### Unraid & Hardware
-Match these details to your system. The stacks are GPU-aware and support both NVIDIA and AMD workflows (ROCm for AI, NVENC/AMF for media).
+Match these details to your system. This Unraid deployment is **NVIDIA-only** for GPU workloads (RTX 4070).
 * **CPU:** Verify if you have iGPU QuickSync (Intel non-F SKU) or must use a discrete GPU.
-* **GPU:** NVIDIA or AMD supported.
+* **GPU:** NVIDIA RTX 4070 (containerized workloads).
 * **RAM:** 64 GB+ recommended for AI workloads.
 * **Storage:**
     * Cache: `/mnt/cache`
     * Vector DB: `/mnt/qdrant` (or an NVMe mount)
 
-**Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the matching driver plugin is installed and GPU is visible in `nvidia-smi` (NVIDIA) or `rocm-smi` (AMD).
+**Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the NVIDIA driver plugin is installed and the RTX 4070 is visible in `nvidia-smi`.
 
 ### Accounts/Subscriptions
 - **Plex Pass** (Required for hardware transcoding).
@@ -70,7 +70,7 @@ Deploy this first to establish the backbone and remote access.
 This sets up your "Netflix-like" streaming experience.
 
 **Configuration Notes:**
-* **Plex Transcoding:** Since your CPU has no iGPU, enable **hardware transcoding** for the RX 7900 XT (AMD). Ensure `/dev/dri` is passed through (set `PLEX_DRI_DEVICE=/dev/dri` in `.env.media`). In Plex Settings > Transcoder, enable hardware acceleration.
+* **Plex Transcoding:** Since your CPU has no iGPU, enable **hardware transcoding** for the RTX 4070. Ensure `/dev/dri` is passed through (set `PLEX_DRI_DEVICE=/dev/dri` in `.env.media`). In Plex Settings > Transcoder, enable hardware acceleration.
 * **Real-Debrid (Zurg):** This service mounts your Real-Debrid torrents to `/mnt/user/realdebrid`. Ensure your `RD_API_KEY` is correct in `.env.media`.
 * **Rdt-Client:** Runs on `:6500` and is used as the Real-Debrid download client for Sonarr/Radarr.
 * **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the Zurg mount or your local `downloads` share on the cache.
@@ -80,13 +80,13 @@ This sets up your "Netflix-like" streaming experience.
 * **Overseerr:** `http://UNRAID_IP:5055` (Request hub)
 
 ### c. AI Core Stack (Ollama + Open WebUI + Qdrant)
-**File:** `stacks/ai-core.yml` (NVIDIA) or `stacks/ai-core-amd.yml` (AMD ROCm)
+**File:** `stacks/ai-core.yml` (NVIDIA)
 
-This enables your local "Sovereign AI" using the RX 7900 XT (ROCm) or CPU fallback.
+This enables your local "Sovereign AI" using the RTX 4070 (NVIDIA) or CPU fallback.
 
 **Deploy with profile:**
 ```
-./scripts/auto-deploy.sh --stack ai-core --profile rocm
+./scripts/auto-deploy.sh --stack ai-core --profile nvidia
 ```
 
 **Storage Optimization:**
@@ -97,7 +97,7 @@ If you want a dedicated NVMe path for Qdrant, update the volume mapping in the s
     ```
 
 **Services:**
-* **Ollama (Brain):** Running on port `11434`. On AMD, use the ROCm image and set `HSA_OVERRIDE_GFX_VERSION=11.0.0` in `.env.ai-core`.
+* **Ollama (Brain):** Running on port `11434`. For Unraid, use the NVIDIA profile and confirm `nvidia-smi` works.
 * **Open WebUI (Chat):** `http://UNRAID_IP:3000`. Connects to Ollama and Qdrant for RAG (chatting with your docs).
 
 ### d. Agentic Stack (n8n + Browserless + Cloudflare)
@@ -124,7 +124,7 @@ This stack powers your automated bidding and web scraping workflows.
 ## 3. Post-Deployment Checklist
 
 1.  **Check GPU Usage:**
-    Run `watch nvidia-smi` (NVIDIA) or `watch rocm-smi` (AMD) in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
+    Run `watch nvidia-smi` in the Unraid terminal while generating text in Open WebUI or transcoding in Plex. You should see processes for `ollama` or `Plex Media Server`.
 2.  **Backups:**
     Your AppData is on `/mnt/cache` (Samsung 990 EVO). Ensure the **Appdata Backup** plugin is installed and scheduled to back up to the Array (HDD) weekly.
 3.  **Security:**
