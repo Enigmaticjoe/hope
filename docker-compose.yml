@@ -1,202 +1,75 @@
-################################################################################
-#  BRAIN AI STACK - Portainer Edition v2
-#  Pop!_OS 24.04 | Intel Ultra 7 265F | AMD RX 7900 XT (20GB) | 128GB RAM
-#
-#  vLLM runs BARE METAL (port 8000) - this stack connects to it
-#  Ollama (11434) + Open WebUI (3000) are already installed on the host
-#  and are not deployed by this stack.
-#  Deploy via: Portainer > Stacks > Add Stack > Upload
-################################################################################
-
-networks:
-  brain-network:
-    driver: bridge
-
-x-dns: &dns
-  - 1.1.1.1
-  - 8.8.8.8
-
-volumes:
-  anythingllm_data:
-  qdrant_data:
-  searxng_data:
-  whisper_data:
-  piper_data:
+version: "3.8"
+name: brawn-omni-stack
 
 services:
-  #============================================================================
-  # ANYTHINGLLM - RAG & Document Processing
-  #============================================================================
-  anythingllm:
-    image: mintplexlabs/anythingllm:latest
-    container_name: brain_anythingllm
+  # --- THE HEART: DEBRID UNLIMITED MEDIA BRIDGE ---
+  dumb:
+    image: iampuid0/dumb:latest
+    container_name: DUMB
     restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
+    runtime: nvidia # PASSTHROUGH FOR YOUR 4070
+    stdin_open: true
+    tty: true
     ports:
-      - "${ANYTHINGLLM_PORT:-3001}:3001"
-    volumes:
-      - anythingllm_data:/app/server/storage
+      - "32400:32400" # Plex
+      - "3005:3005"   # DUMB Management UI
+      - "8090:8080"   # Zurg Web UI
+      - "9696:9696"   # Prowlarr
+      - "8989:8989"   # Sonarr
+      - "7878:7878"   # Radarr
     environment:
-      - STORAGE_DIR=/app/server/storage
-      # Use vLLM as primary LLM
-      - LLM_PROVIDER=openai
-      - OPENAI_BASE_PATH=http://host.docker.internal:${VLLM_PORT:-8000}/v1
-      - OPENAI_API_KEY=sk-no-key-needed
-      - OPENAI_MODEL_PREF=dolphin-2.9.3-mistral-nemo-12b
-      # Embeddings via host Ollama (11434)
-      - EMBEDDING_ENGINE=ollama
-      - EMBEDDING_BASE_PATH=http://host.docker.internal:11434
-      - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
-      # Vector DB
-      - VECTOR_DB=qdrant
-      - QDRANT_ENDPOINT=http://qdrant:6333
-    dns: *dns
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - PUID=99
+      - PGID=100
+      - TZ=America/New_York
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - RD_API_KEY=${RD_API_KEY}
+      - ZURG_ENABLED=true
+      - RCLONE_MOUNT_NAME=pd_zurg
+    volumes:
+      - /mnt/user/appdata/dumb/config:/config
+      - /mnt/user/appdata/dumb/log:/log
+      - /mnt/user/media:/data
+      - /mnt/disks/realdebrid:/mnt/debrid:shared
+      - /dev/shm:/transcode
     cap_add:
       - SYS_ADMIN
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    devices:
+      - /dev/fuse:/dev/fuse
+      - /dev/dri:/dev/dri
+    security_opt:
+      - apparmor:unconfined
 
-  #============================================================================
-  # QDRANT - Vector Database for RAG
-  #============================================================================
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: brain_qdrant
+  # --- THE SHIELD: LOCAL TORRENTS VIA MULLVAD ---
+  qbittorrent:
+    image: binhex/arch-qbittorrentvpn:latest
+    container_name: qbittorrent_vpn
     restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
     ports:
-      - "${QDRANT_HTTP_PORT:-6333}:6333"
-      - "${QDRANT_GRPC_PORT:-6334}:6334"
-    volumes:
-      - qdrant_data:/qdrant/storage
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
     environment:
-      - QDRANT__SERVICE__GRPC_PORT=6334
-      - QDRANT__SERVICE__HTTP_PORT=6333
-    dns: *dns
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  #============================================================================
-  # SEARXNG - Private Search Engine
-  #============================================================================
-  searxng:
-    image: searxng/searxng:latest
-    container_name: brain_searxng
-    restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
-    ports:
-      - "${SEARXNG_PORT:-8888}:8080"
+      - PUID=99
+      - PGID=100
+      - VPN_ENABLED=yes
+      - VPN_PROV=custom
+      - VPN_CLIENT=wireguard
+      - LAN_NETWORK=192.168.1.0/24
+      - NAME_SERVERS=1.1.1.1,8.8.8.8
     volumes:
-      - searxng_data:/etc/searxng
-    environment:
-      - SEARXNG_BASE_URL=http://localhost:${SEARXNG_PORT:-8888}
-      - INSTANCE_NAME=Brain Search
-    dns: *dns
-    cap_drop:
-      - ALL
+      - /mnt/user/appdata/qbittorrent:/config
+      - /mnt/user/media/downloads:/downloads
     cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - NET_ADMIN
 
-  #============================================================================
-  # WHISPER - Speech to Text (for Home Assistant Wyoming)
-  #============================================================================
-  whisper:
-    image: rhasspy/wyoming-whisper:latest
-    container_name: brain_whisper
+  # --- THE BACKUP: STREMIO ---
+  stremio:
+    image: tsaridas/stremio-docker:latest
+    container_name: stremio
     restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
     ports:
-      - "${WHISPER_PORT:-10300}:10300"
+      - "8089:8080"
+      - "11478:11470"
     volumes:
-      - whisper_data:/data
-    command: 
-      - "--model"
-      - "small-int8"
-      - "--language"
-      - "en"
-      - "--beam-size"
-      - "1"
-      - "--device"
-      - "cpu"
-    dns: *dns
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "10300"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-
-  #============================================================================
-  # PIPER - Text to Speech (for Home Assistant Wyoming)
-  #============================================================================
-  piper:
-    image: rhasspy/wyoming-piper:latest
-    container_name: brain_piper
-    restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
-    ports:
-      - "${PIPER_PORT:-10200}:10200"
-    volumes:
-      - piper_data:/data
-    command:
-      - "--voice"
-      - "en_US-lessac-medium"
-    dns: *dns
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "10200"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  #============================================================================
-  # HOMEPAGE - Dashboard Launcher
-  #============================================================================
-  homepage:
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: brain_homepage
-    restart: unless-stopped
-    networks:
-      - brain-network
-    env_file:
-      - ./stack.env
-    ports:
-      - "${HOMEPAGE_PORT:-80}:3000"
-    volumes:
-      - ./homepage:/app/config
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - PUID=1000
-      - PGID=1000
-    dns: *dns
+      - /mnt/user/appdata/stremio:/root/.stremio-server

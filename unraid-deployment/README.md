@@ -2,7 +2,7 @@
 
 Complete, modular deployment files for a fully-featured Unraid smart home server with Media Services, AI Tools, Infrastructure, and Home Automation.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Unraid + Portainer First)
 
 ### 1. Prerequisites
 - Unraid server with Docker support
@@ -12,8 +12,15 @@ Complete, modular deployment files for a fully-featured Unraid smart home server
 ### 2. Setup Environment Files
 Copy and customize the environment templates:
 
+### 2. Generate `.env` Files (Interactive Wizard)
+Use the wizard to prompt through every required variable:
 ```bash
 cd unraid-deployment
+./scripts/env-wizard.sh
+```
+
+If you prefer manual setup, copy from templates:
+```bash
 cp env-templates/.env.infrastructure .env.infrastructure
 cp env-templates/.env.media .env.media
 cp env-templates/.env.ai-core .env.ai-core
@@ -27,37 +34,38 @@ Edit each `.env.*` file with your specific values (API keys, paths, etc.). For t
 
 #### Option A: Using the Auto-Deploy Script
 ```bash
-cd unraid-deployment
-./scripts/auto-deploy.sh
+./scripts/preflight.sh --profile rocm
 ```
 
-#### Option B: Using Portainer
-1. Open Portainer web UI (http://your-unraid-ip:9000)
-2. Create a new stack for each YAML file in `stacks/`
-3. Upload the corresponding `.env` file for each stack
-4. Deploy in order: infrastructure → media → ai-core → home-automation → agentic
+### 4. Deploy with Portainer (Priority Path)
+1. Open **Portainer** → Stacks → **Add stack**
+2. Create stacks from the files in `stacks/` with the matching `.env.*` file:
+   - `infrastructure.yml` → `.env.infrastructure`
+   - `media.yml` → `.env.media`
+   - `ai-core.yml` → `.env.ai-core` (use profile selection in Portainer)
+   - `home-automation.yml` → `.env.home-automation`
+   - `agentic.yml` → `.env.agentic`
+3. Deploy in order: **infrastructure → media → ai-core → home-automation → agentic**.
 
-#### Option C: Using Docker Compose
+### 5. Post-Deploy (User Scripts)
+Use the User Scripts plugin to run the Chimera media configurator:
 ```bash
-cd unraid-deployment/stacks
+mkdir -p /boot/config/plugins/user.scripts/scripts/chimera-configurator
+mkdir -p /boot/config/plugins/chimera
+cp user-scripts/chimera-configurator/* /boot/config/plugins/user.scripts/scripts/chimera-configurator/
+cp user-scripts/chimera-configurator/media_configurator.py /boot/config/plugins/chimera/
+chmod +x /boot/config/plugins/user.scripts/scripts/chimera-configurator/script
+chmod +x /boot/config/plugins/chimera/media_configurator.py
+```
+Then go to **Settings → User Scripts** and run **Chimera Media Stack Configurator**.
 
-# Deploy infrastructure stack
-docker compose -f infrastructure.yml --env-file ../.env.infrastructure up -d
-
-# Deploy media stack
-docker compose -f media.yml --env-file ../.env.media up -d
-
-# Deploy AI core stack
-docker compose -f ai-core.yml --env-file ../.env.ai-core up -d
-
-# Deploy home automation stack
-docker compose -f home-automation.yml --env-file ../.env.home-automation up -d
-
-# Deploy agentic stack
-docker compose -f agentic.yml --env-file ../.env.agentic up -d
+### 6. Optional: CLI Automation (If You Want It)
+The scripted path is available, but Portainer remains the primary control plane:
+```bash
+./scripts/chimera-install.sh --all
 ```
 
-### 4. Auto-Configure Media Stack (Recommended)
+### 7. Auto-Configure Media Stack (Recommended)
 After deploying the media stack, run the Chimera configurator to automatically wire everything together.
 
 **Three deployment options:**
@@ -96,13 +104,13 @@ This automatically configures:
 
 See **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** for full deployment guide.
 
-### 5. Configure Homepage Dashboard
+### 8. Configure Homepage Dashboard
 Copy the dashboard configuration to your Homepage appdata folder:
 ```bash
 cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ```
 
-### 6. Verify GPU Support (for AI stack)
+### 9. Verify GPU Support (for AI stack)
 ```bash
 ./scripts/gpu-check.sh
 ```
@@ -125,12 +133,15 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Bazarr** - Subtitle management
 - **Overseerr** - Media requests
 - **Tautulli** - Plex analytics
+- **Rdt-Client** - Real-Debrid download client
 - **Zurg** - Real-Debrid integration
 
 ### AI Core Stack
 - **Ollama (ROCm)** - Local LLM inference engine (AMD 7900 XT)
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
+
+**AMD ROCm option:** Use `stacks/ai-core-amd.yml` with `/dev/kfd` + `/dev/dri` passthrough and `HSA_OVERRIDE_GFX_VERSION` configured in `.env.ai-core`.
 
 ### Home Automation Stack
 - **Home Assistant** - Home automation hub
@@ -150,6 +161,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 - **[UNRAID-DEPLOYMENT.md](./UNRAID-DEPLOYMENT.md)** - Comprehensive deployment guide
 - **[CHIMERA-SETUP.md](./CHIMERA-SETUP.md)** - Media stack auto-configuration (User Scripts, Portainer, CLI)
 - **[AGENTIC-BIDDING.md](./AGENTIC-BIDDING.md)** - Agentic bidding workflow + Zero Trust ingress
+- **[CHIMERA-OPS.md](./CHIMERA-OPS.md)** - Ops runbook, prompts, and service cheat sheets
 
 ## 🛠 Utility Scripts
 
@@ -161,6 +173,7 @@ For complete setup instructions, configuration details, and troubleshooting:
 | `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
 | `gpu-check.sh` | Verify AMD ROCm GPU support for AI services |
 | `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
+| `chimera-install.sh` | End-to-end installer (prepare → validate → deploy → configure) |
 
 ## 🔒 Security Notes
 

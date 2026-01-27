@@ -16,6 +16,12 @@ services:
     - name: Dozzle (Logs)
       url: http://192.168.1.9:9999
       icon: mdi:file-chart
+    - name: Cloudflare Dashboard
+      url: https://dash.cloudflare.com
+      icon: mdi:cloud
+    - name: Cloudflare Zero Trust
+      url: https://one.dash.cloudflare.com
+      icon: mdi:shield-lock
 
 - name: Media
   items:
@@ -43,15 +49,27 @@ services:
     - name: RealDebrid (Zurg)
       url: http://192.168.1.9:9090
       icon: mdi:cloud-download
+    - name: Rdt-Client
+      url: http://192.168.1.9:6500
+      icon: mdi:download-circle
 
 - name: AI & Tools
   items:
     - name: Open WebUI (Chatbot)
       url: http://192.168.1.9:3000
       icon: mdi:robot
+    - name: Ollama API
+      url: http://192.168.1.9:11434
+      icon: mdi:brain
     - name: Qdrant UI
       url: http://192.168.1.9:6333
       icon: mdi:database-search
+    - name: n8n (Agentic)
+      url: http://192.168.1.9:5678
+      icon: mdi:robot-industrial
+    - name: Browserless
+      url: http://192.168.1.9:3005
+      icon: mdi:google-chrome
 
 - name: Home Automation
   items:
@@ -67,3 +85,21 @@ services:
     - name: ESPHome
       url: http://192.168.1.9:6052
       icon: mdi:chip
+
+- name: Cloudflare Control Plane
+  items:
+    - name: Cloudflare Zero Trust
+      url: https://one.dash.cloudflare.com
+      icon: mdi:shield-lock
+    - name: Cloudflare DNS
+      url: https://dash.cloudflare.com
+      icon: mdi:dns
+    - name: Cloudflare Tunnels
+      url: https://dash.cloudflare.com/?to=/:account/zero-trust/access/tunnels
+      icon: mdi:cloud-outline
+    - name: Cloudflare Workers
+      url: https://dash.cloudflare.com/?to=/:account/workers
+      icon: mdi:cloud-braces
+    - name: Cloudflare R2
+      url: https://dash.cloudflare.com/?to=/:account/r2
+      icon: mdi:database

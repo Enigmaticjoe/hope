@@ -1,8 +1,21 @@
 #!/bin/bash
 # wipe-and-prep.sh - Stop all containers, remove old data, and prepare directories for a fresh deployment.
 
+set -euo pipefail
+
+if [[ "${1:-}" != "--force" ]]; then
+  cat <<'EOF'
+WARNING: This will remove ALL containers, unused images, volumes, and networks.
+It will also DELETE appdata for the Chimera stack.
+
+If you are sure, re-run with:
+  ./wipe-and-prep.sh --force
+EOF
+  exit 1
+fi
+
 echo "Stopping and removing all Docker containers..."
-docker rm -f $(docker ps -aq) 2>/dev/null
+docker rm -f $(docker ps -aq) 2>/dev/null || true
 
 echo "Removing unused Docker volumes and networks..."
 docker volume prune -f
@@ -13,8 +26,8 @@ docker image prune -af
 
 # Ensure no Real Debrid fuse mount is still active
 if mountpoint -q /mnt/user/realdebrid; then
-    echo "Unmounting Real Debrid fuse mount..."
-    umount -l /mnt/user/realdebrid/pd_zurg 2>/dev/null || true
+  echo "Unmounting Real Debrid fuse mount..."
+  umount -l /mnt/user/realdebrid/pd_zurg 2>/dev/null || true
 fi
 
 echo "Cleaning application data directories..."
@@ -23,7 +36,7 @@ homepage uptime-kuma tailscale \
 homeassistant mosquitto nodered zigbee2mqtt esphome \
 ollama openwebui qdrant"
 for d in $APPDATA_DIRS; do
-    rm -rf /mnt/user/appdata/$d
+  rm -rf /mnt/user/appdata/$d
 done
 
 echo "Recreating fresh directories..."
