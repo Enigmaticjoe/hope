@@ -16,7 +16,7 @@ Match these details to your system. This Unraid deployment is **NVIDIA-only** fo
 **Critical Step:** If your CPU lacks QuickSync, you must use a discrete GPU for Plex transcoding and AI acceleration. Ensure the NVIDIA driver plugin is installed and the RTX 4070 is visible in `nvidia-smi`.
 
 ### Accounts/Subscriptions
-- **Plex Pass** (Required for hardware transcoding on NVIDIA).
+- **Plex Pass** (Required for hardware transcoding).
 - **Real-Debrid** (Premium account for Zurg/Riven).
 - **Tailscale** (For secure remote access).
 - **Cloudflare** (For the Agentic stack tunnels + Zero Trust policies).
@@ -37,7 +37,7 @@ All stacks are designed for **Portainer** on Unraid. Portainer is the primary de
 **Recommended preflight:**
 ```bash
 cd unraid-deployment
-./scripts/preflight.sh --profile nvidia
+./scripts/preflight.sh --profile rocm
 ```
 
 **Generate `.env` files (interactive):**
@@ -55,6 +55,9 @@ cd unraid-deployment
 Deploy this first to establish the backbone and remote access.
 1.  **Tailscale:** Connects your server to your private VPN mesh.
 2.  **Homepage:** Your central dashboard.
+3.  **Unraid API:** Provides programmatic access to My Servers (used by automation + monitoring).
+
+**Required:** Set `UNRAID_API_KEY` in `.env.infrastructure` before deploying.
 
 **Post-Deploy:**
 * Log into Tailscale Admin and approve the `unraid` node.

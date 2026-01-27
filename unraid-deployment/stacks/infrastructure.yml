@@ -32,6 +32,17 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
 
+  unraid-api:
+    image: ghcr.io/unraid/unraid-api:latest
+    container_name: unraid-api
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - UNRAID_API_URL=${UNRAID_API_URL}
+      - UNRAID_API_KEY=${UNRAID_API_KEY}
+    ports:
+      - "${UNRAID_API_PORT}:3000"
+
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma

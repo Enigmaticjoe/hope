@@ -77,7 +77,7 @@ check_ports() {
   local homepage_port="${HOMEPAGE_PORT:-8008}"
   local browserless_port="${BROWSERLESS_PORT:-3005}"
   local ports=(
-    8000 9000 "${homepage_port}" 3010 9999
+    "${homepage_port}" 3010 9999
     11434 3000 6333
     32400 32469 1900 32410 32412 32413 32414
     8989 7878 9696 6767 5055 8181 9090 6500

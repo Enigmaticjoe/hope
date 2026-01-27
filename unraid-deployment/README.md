@@ -4,12 +4,13 @@ Complete, modular deployment files for a fully-featured Unraid smart home server
 
 ## 🚀 Quick Start (Unraid + Portainer First)
 
-### 1. Prerequisites (Fresh Docker)
-- **Unraid 6.12+** with Docker enabled.
-- **Portainer CE** installed from Apps (this is your primary deployment control plane).
-- **User Scripts plugin** installed from Apps (used for post-deploy automation).
-- NVIDIA drivers installed for the RTX 4070 if you plan to run AI locally.
-- Accounts: Plex Pass, Real-Debrid, Tailscale, Cloudflare (for tunnels).
+### 1. Prerequisites
+- Unraid server with Docker support
+- AMD GPU driver plugin installed (for ROCm AI acceleration)
+- Accounts: Plex Pass, Real-Debrid, Tailscale (and Unraid API key for My Servers)
+
+### 2. Setup Environment Files
+Copy and customize the environment templates:
 
 ### 2. Generate `.env` Files (Interactive Wizard)
 Use the wizard to prompt through every required variable:
@@ -27,9 +28,13 @@ cp env-templates/.env.home-automation .env.home-automation
 cp env-templates/.env.agentic .env.agentic
 ```
 
-### 3. Preflight (Ports + Docker Socket + DNS)
+Edit each `.env.*` file with your specific values (API keys, paths, etc.). For the Unraid API, set `UNRAID_API_KEY` in `.env.infrastructure`.
+
+### 3. Deploy the Stacks
+
+#### Option A: Using the Auto-Deploy Script
 ```bash
-./scripts/preflight.sh --profile nvidia
+./scripts/preflight.sh --profile rocm
 ```
 
 ### 4. Deploy with Portainer (Priority Path)
@@ -115,6 +120,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ### Infrastructure Stack
 - **Tailscale** - Secure VPN access to your network
 - **Homepage** - Unified dashboard for all services
+- **Unraid API** - Programmatic access to Unraid My Servers API
 - **Uptime Kuma** - Service monitoring
 - **Dozzle** - Real-time log viewer
 - **Watchtower** - Automatic container updates
@@ -131,7 +137,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Zurg** - Real-Debrid integration
 
 ### AI Core Stack
-- **Ollama** - Local LLM inference engine
+- **Ollama (ROCm)** - Local LLM inference engine (AMD 7900 XT)
 - **Open WebUI** - ChatGPT-like interface
 - **Qdrant** - Vector database for RAG
 
@@ -163,10 +169,9 @@ For complete setup instructions, configuration details, and troubleshooting:
 |--------|---------|
 | `chimera-setup.sh` | Auto-configure media stack integrations (Sonarr↔Radarr↔Prowlarr↔Rdt-Client) |
 | `media_configurator.py` | Python tool for media stack configuration (used by chimera-setup.sh) |
-| `auto-deploy.sh` | Automated deployment of all stacks (supports profiles and single-stack mode) |
-| `preflight.sh` | Validates docker socket access, env files, ports, DNS, and GPU profile |
-| `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories (requires --force) |
-| `gpu-check.sh` | Verify NVIDIA GPU support for AI services |
+| `auto-deploy.sh` | Automated deployment of all stacks |
+| `wipe-and-prep.sh` | Clean slate: removes all containers and prepares directories |
+| `gpu-check.sh` | Verify AMD ROCm GPU support for AI services |
 | `agentic-bootstrap.sh` | Creates ai_grid network, checks ports, and primes appdata |
 | `chimera-install.sh` | End-to-end installer (prepare → validate → deploy → configure) |
 
