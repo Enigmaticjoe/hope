@@ -1,75 +1,103 @@
 version: "3.8"
-name: brawn-omni-stack
+name: chimera-brain-stack
 
 services:
-  # --- THE HEART: DEBRID UNLIMITED MEDIA BRIDGE ---
-  dumb:
-    image: iampuid0/dumb:latest
-    container_name: DUMB
+  ollama-rocm:
+    image: ollama/ollama:rocm
+    container_name: chimera-ollama
     restart: unless-stopped
-    runtime: nvidia # PASSTHROUGH FOR YOUR 4070
-    stdin_open: true
-    tty: true
-    ports:
-      - "32400:32400" # Plex
-      - "3005:3005"   # DUMB Management UI
-      - "8090:8080"   # Zurg Web UI
-      - "9696:9696"   # Prowlarr
-      - "8989:8989"   # Sonarr
-      - "7878:7878"   # Radarr
-    environment:
-      - PUID=99
-      - PGID=100
-      - TZ=America/New_York
-      - NVIDIA_VISIBLE_DEVICES=all
-      - PLEX_CLAIM=${PLEX_CLAIM}
-      - RD_API_KEY=${RD_API_KEY}
-      - ZURG_ENABLED=true
-      - RCLONE_MOUNT_NAME=pd_zurg
-    volumes:
-      - /mnt/user/appdata/dumb/config:/config
-      - /mnt/user/appdata/dumb/log:/log
-      - /mnt/user/media:/data
-      - /mnt/disks/realdebrid:/mnt/debrid:shared
-      - /dev/shm:/transcode
-    cap_add:
-      - SYS_ADMIN
     devices:
-      - /dev/fuse:/dev/fuse
+      - /dev/kfd:/dev/kfd
       - /dev/dri:/dev/dri
-    security_opt:
-      - apparmor:unconfined
-
-  # --- THE SHIELD: LOCAL TORRENTS VIA MULLVAD ---
-  qbittorrent:
-    image: binhex/arch-qbittorrentvpn:latest
-    container_name: qbittorrent_vpn
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-      - "6881:6881"
-      - "6881:6881/udp"
     environment:
-      - PUID=99
-      - PGID=100
-      - VPN_ENABLED=yes
-      - VPN_PROV=custom
-      - VPN_CLIENT=wireguard
-      - LAN_NETWORK=192.168.1.0/24
-      - NAME_SERVERS=1.1.1.1,8.8.8.8
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-5m}
+    group_add:
+      - video
+      - render
     volumes:
-      - /mnt/user/appdata/qbittorrent:/config
-      - /mnt/user/media/downloads:/downloads
-    cap_add:
-      - NET_ADMIN
-
-  # --- THE BACKUP: STREMIO ---
-  stremio:
-    image: tsaridas/stremio-docker:latest
-    container_name: stremio
-    restart: unless-stopped
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/ollama:/root/.ollama
     ports:
-      - "8089:8080"
-      - "11478:11470"
+      - "11434:11434"
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: chimera-openwebui
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+      - ollama-rocm
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - VECTOR_DB=qdrant
+      - QDRANT_URI=http://qdrant:6333
+      - OLLAMA_BASE_URL=http://ollama-rocm:11434
+      - OPENAI_API_BASE_URL=http://host.docker.internal:8000/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
-      - /mnt/user/appdata/stremio:/root/.stremio-server
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/openwebui:/app/backend/data
+    ports:
+      - "3000:8080"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: chimera-qdrant
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/qdrant/storage:/qdrant/storage
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/qdrant/snapshots:/qdrant/snapshots
+    ports:
+      - "6333:6333"
+
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: chimera-anythingllm
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+      - searxng
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - STORAGE_DIR=/app/server/storage
+      - VECTOR_DB=qdrant
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - SEARXNG_ENDPOINT=http://searxng:8080
+    volumes:
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/anythingllm:/app/server/storage
+    ports:
+      - "3001:3001"
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: chimera-searxng
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - BASE_URL=${SEARXNG_BASE_URL:-http://localhost:8888/}
+    volumes:
+      - ./brain-config/searxng/settings.yml:/etc/searxng/settings.yml:ro
+      - ./brain-config/searxng/limiter.toml:/etc/searxng/limiter.toml:ro
+    ports:
+      - "8888:8080"
+
+  wyoming-whisper:
+    image: rhasspy/wyoming-whisper:latest
+    container_name: chimera-whisper
+    restart: unless-stopped
+    command: --model medium --language en
+    volumes:
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/whisper:/data
+    ports:
+      - "10300:10300"
+
+  wyoming-piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: chimera-piper
+    restart: unless-stopped
+    command: --voice en_US-amy-medium
+    volumes:
+      - ${APPDATA_PATH:-/opt/chimera/appdata}/piper:/data
+    ports:
+      - "10200:10200"
