@@ -1,6 +1,6 @@
 # Chimera Media Stack Configurator
 # Lightweight container for auto-configuring media services
-FROM python:3.11-alpine
+FROM python:3.12-alpine
 
 LABEL maintainer="Project Chimera"
 LABEL description="Auto-configure Sonarr, Radarr, Prowlarr, and other media services"

@@ -14,10 +14,10 @@ set -a
 [ -f "${ROOT_DIR}/.env.ai-core" ] && source "${ROOT_DIR}/.env.ai-core"
 [ -f "${ROOT_DIR}/.env.home-automation" ] && source "${ROOT_DIR}/.env.home-automation"
 [ -f "${ROOT_DIR}/.env.agentic" ] && source "${ROOT_DIR}/.env.agentic"
+[ -f "${ROOT_DIR}/.env.moltbot" ] && source "${ROOT_DIR}/.env.moltbot"
 set +a
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STACKS=(infrastructure media ai-core home-automation agentic)
+STACKS=(infrastructure media ai-core home-automation agentic moltbot)
 ONLY_STACK=""
 SKIP_PULL=0
 DRY_RUN=0
@@ -132,27 +132,41 @@ MOSQ
     mosquitto_passwd -c -b /mosquitto/config/passwordfile "$MQTT_USER" "$MQTT_PASSWORD"
 fi
 
-echo "Pulling latest Docker images for all stacks..."
-docker compose -f "${STACKS_DIR}/infrastructure.yml" --env-file "${ROOT_DIR}/.env.infrastructure" pull
-docker compose -f "${STACKS_DIR}/media.yml" --env-file "${ROOT_DIR}/.env.media" pull
-docker compose -f "${STACKS_DIR}/ai-core.yml" --env-file "${ROOT_DIR}/.env.ai-core" pull
-docker compose -f "${STACKS_DIR}/home-automation.yml" --env-file "${ROOT_DIR}/.env.home-automation" pull
-docker compose -f "${STACKS_DIR}/agentic.yml" --env-file "${ROOT_DIR}/.env.agentic" pull
+run_cmd() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "DRY-RUN: $*"
+  else
+    "$@"
+  fi
+}
 
-echo "Deploying infrastructure stack..."
-docker compose -f "${STACKS_DIR}/infrastructure.yml" --env-file "${ROOT_DIR}/.env.infrastructure" up -d
+for stack in "${STACKS[@]}"; do
+  stack_file="${STACKS_DIR}/${stack}.yml"
+  env_file="${ROOT_DIR}/.env.${stack}"
 
-echo "Deploying media stack..."
-docker compose -f "${STACKS_DIR}/media.yml" --env-file "${ROOT_DIR}/.env.media" up -d
+  if [[ ! -f "${stack_file}" ]]; then
+    echo "WARNING: Stack file not found: ${stack_file}, skipping." >&2
+    continue
+  fi
+  if [[ ! -f "${env_file}" ]]; then
+    echo "WARNING: Env file not found: ${env_file}, skipping." >&2
+    continue
+  fi
 
-echo "Deploying AI core stack (profile: ${PROFILE})..."
-COMPOSE_PROFILES="${PROFILE}" docker compose -f "${STACKS_DIR}/ai-core.yml" --env-file "${ROOT_DIR}/.env.ai-core" up -d
+  compose_args=(-f "${stack_file}" --env-file "${env_file}")
+  profile_prefix=()
+  if [[ "${stack}" == "ai-core" ]]; then
+    profile_prefix=(env "COMPOSE_PROFILES=${PROFILE}")
+  fi
 
-echo "Deploying home automation stack..."
-docker compose -f "${STACKS_DIR}/home-automation.yml" --env-file "${ROOT_DIR}/.env.home-automation" up -d
+  if [[ "$SKIP_PULL" -eq 0 ]]; then
+    echo "Pulling images for ${stack}..."
+    run_cmd "${profile_prefix[@]}" docker compose "${compose_args[@]}" pull
+  fi
 
-echo "Deploying agentic stack..."
-docker compose -f "${STACKS_DIR}/agentic.yml" --env-file "${ROOT_DIR}/.env.agentic" up -d
+  echo "Deploying ${stack} stack..."
+  run_cmd "${profile_prefix[@]}" docker compose "${compose_args[@]}" up -d
+done
 
 echo "All requested stacks deployed. Verify via Portainer UI or 'docker ps' that containers are running."
 

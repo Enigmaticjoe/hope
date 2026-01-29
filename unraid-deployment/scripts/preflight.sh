@@ -9,6 +9,7 @@ set -a
 [ -f .env.ai-core ] && source .env.ai-core
 [ -f .env.home-automation ] && source .env.home-automation
 [ -f .env.agentic ] && source .env.agentic
+[ -f .env.moltbot ] && source .env.moltbot
 set +a
 
 usage() {
@@ -37,7 +38,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-STACK_ENV_FILES=(.env.infrastructure .env.media .env.ai-core .env.home-automation .env.agentic)
+STACK_ENV_FILES=(.env.infrastructure .env.media .env.ai-core .env.home-automation .env.agentic .env.moltbot)
 
 ensure_docker_socket() {
   if [[ ! -S /var/run/docker.sock ]]; then
@@ -83,6 +84,7 @@ check_ports() {
     8989 7878 9696 6767 5055 8181 9090 6500
     8123 1880 1883 8080 6052
     5678 "${browserless_port}"
+    "${MOLTBOT_PORT:-18789}" "${MOLTBOT_CANVAS_PORT:-18793}"
   )
   declare -A seen=()
   local in_use=0
@@ -95,7 +97,7 @@ check_ports() {
     fi
     seen["${port}"]=1
     if command -v ss >/dev/null 2>&1; then
-      if ss -tulpn | rg -q ":${port}\\b"; then
+      if ss -tulpn | grep -qE ":${port}[[:space:]]|:${port}$"; then
         if [[ "${port}" == "9000" ]]; then
           echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
         else
@@ -126,7 +128,7 @@ check_ports() {
 
 check_dns() {
   if [[ -f /etc/resolv.conf ]]; then
-    if rg -q "nameserver 127.0.0.53" /etc/resolv.conf; then
+    if grep -q "nameserver 127.0.0.53" /etc/resolv.conf; then
       echo "WARN: systemd-resolved stub detected in /etc/resolv.conf" >&2
       echo "      Consider setting direct DNS (e.g., 1.1.1.1 or 8.8.8.8)." >&2
     fi

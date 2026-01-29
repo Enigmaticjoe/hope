@@ -8,7 +8,7 @@ services:
       url: http://192.168.1.9:9000
       icon: mdi:docker
     - name: Unraid API
-      url: http://192.168.1.9:3005
+      url: http://192.168.1.9:3006
       icon: mdi:api
     - name: Uptime Kuma
       url: http://192.168.1.9:3010
@@ -16,12 +16,6 @@ services:
     - name: Dozzle (Logs)
       url: http://192.168.1.9:9999
       icon: mdi:file-chart
-    - name: Cloudflare Dashboard
-      url: https://dash.cloudflare.com
-      icon: mdi:cloud
-    - name: Cloudflare Zero Trust
-      url: https://one.dash.cloudflare.com
-      icon: mdi:shield-lock
 
 - name: Media
   items:
@@ -70,6 +64,9 @@ services:
     - name: Browserless
       url: http://192.168.1.9:3005
       icon: mdi:google-chrome
+    - name: MoltBot Canvas
+      url: http://192.168.1.9:18793
+      icon: mdi:robot-outline
 
 - name: Home Automation
   items:

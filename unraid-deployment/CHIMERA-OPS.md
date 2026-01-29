@@ -132,8 +132,12 @@ Use `http request` node to hit `http://ollama:11434/api/generate` for local LLM 
 
 ### Agentic
 - n8n → `http://192.168.1.9:5678` → `/mnt/user/appdata/n8n`
-- Browserless → `http://192.168.1.9:${BROWSERLESS_PORT:-3000}`
+- Browserless → `http://192.168.1.9:${BROWSERLESS_PORT:-3005}`
 - Cloudflared → `https://dash.cloudflare.com`
+
+### MoltBot
+- MoltBot Gateway → `ws://192.168.1.9:18789` → `/mnt/user/appdata/moltbot`
+- MoltBot Canvas → `http://192.168.1.9:18793`
 
 ## 6) AI Prompt Templates (Ops + Media + Home)
 **Stack Health Prompt**

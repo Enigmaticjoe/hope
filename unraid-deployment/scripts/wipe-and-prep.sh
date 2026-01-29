@@ -31,10 +31,11 @@ if mountpoint -q /mnt/user/realdebrid; then
 fi
 
 echo "Cleaning application data directories..."
-APPDATA_DIRS="plex sonarr radarr prowlarr bazarr overseerr tautulli zurg \
-homepage uptime-kuma tailscale \
+APPDATA_DIRS="plex sonarr radarr prowlarr bazarr overseerr tautulli zurg rdt-client \
+homepage uptime-kuma tailscale dozzle \
 homeassistant mosquitto nodered zigbee2mqtt esphome \
-ollama openwebui qdrant"
+ollama openwebui qdrant \
+n8n moltbot"
 for d in $APPDATA_DIRS; do
   rm -rf /mnt/user/appdata/$d
 done
@@ -43,6 +44,7 @@ echo "Recreating fresh directories..."
 mkdir -p /mnt/user/appdata/{plex,sonarr,radarr,prowlarr,bazarr,overseerr,tautulli,zurg,homepage,uptime-kuma,tailscale}
 mkdir -p /mnt/user/appdata/{homeassistant,mosquitto/config,mosquitto/data,mosquitto/log,nodered,zigbee2mqtt,esphome}
 mkdir -p /mnt/user/appdata/{ollama,openwebui,qdrant/storage,qdrant/snapshots}
+mkdir -p /mnt/user/appdata/{n8n,moltbot,rdt-client,dozzle}
 mkdir -p /mnt/user/media/{movies,tv,music,downloads}
 mkdir -p /mnt/user/realdebrid
 

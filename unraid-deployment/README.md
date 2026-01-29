@@ -5,12 +5,9 @@ Complete, modular deployment files for a fully-featured Unraid smart home server
 ## 🚀 Quick Start (Unraid + Portainer First)
 
 ### 1. Prerequisites
-- Unraid server with Docker support
-- AMD GPU driver plugin installed (for ROCm AI acceleration)
+- Unraid server (6.12+) with Docker support
+- NVIDIA GPU driver plugin installed (RTX 4070 for AI acceleration + Plex transcoding)
 - Accounts: Plex Pass, Real-Debrid, Tailscale (and Unraid API key for My Servers)
-
-### 2. Setup Environment Files
-Copy and customize the environment templates:
 
 ### 2. Generate `.env` Files (Interactive Wizard)
 Use the wizard to prompt through every required variable:
@@ -31,11 +28,9 @@ cp env-templates/.env.moltbot .env.moltbot
 
 Edit each `.env.*` file with your specific values (API keys, paths, etc.). For the Unraid API, set `UNRAID_API_KEY` in `.env.infrastructure`.
 
-### 3. Deploy the Stacks
-
-#### Option A: Using the Auto-Deploy Script
+### 3. Run Preflight Checks
 ```bash
-./scripts/preflight.sh --profile rocm
+./scripts/preflight.sh --profile nvidia
 ```
 
 ### 4. Deploy with Portainer (Priority Path)

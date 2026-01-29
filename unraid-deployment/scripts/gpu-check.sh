@@ -5,7 +5,7 @@ set -euo pipefail
 
 check_nvidia() {
   if command -v nvidia-smi &> /dev/null; then
-    echo "Host NVIDIA GPU status:"i
+    echo "Host NVIDIA GPU status:"
     nvidia-smi
 
     if docker ps --format '{{.Names}}' | grep -q "^ollama-nvidia$"; then

@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TEMPLATE_DIR="${ROOT_DIR}/env-templates"
 
-STACKS=(infrastructure media ai-core home-automation agentic)
+STACKS=(infrastructure media ai-core home-automation agentic moltbot)
 
 log() {
   printf "\n[%s] %s\n" "${1}" "${2}"

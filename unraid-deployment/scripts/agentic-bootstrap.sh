@@ -6,7 +6,7 @@ APPDATA_PATH=${APPDATA_PATH:-/mnt/user/appdata}
 
 port_in_use() {
   local port=$1
-  if ss -tulpn | rg -q ":${port}\\b"; then
+  if ss -tulpn | grep -qE ":${port}[[:space:]]|:${port}$"; then
     return 0
   fi
   return 1
@@ -25,7 +25,7 @@ ensure_docker_socket() {
 }
 
 ensure_network() {
-  if ! docker network ls --format '{{.Name}}' | rg -q "^${AI_GRID_NETWORK}$"; then
+  if ! docker network ls --format '{{.Name}}' | grep -q "^${AI_GRID_NETWORK}$"; then
     echo "Creating Docker network: ${AI_GRID_NETWORK}"
     docker network create "${AI_GRID_NETWORK}"
   else
