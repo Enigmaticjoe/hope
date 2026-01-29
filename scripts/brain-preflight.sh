@@ -11,8 +11,6 @@ ports=(
   3001
   6333
   8888
-  18789
-  18793
 )
 
 echo "Chimera Brain preflight: checking for port conflicts..."
