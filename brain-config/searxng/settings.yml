@@ -1,0 +1,25 @@
+use_default_settings: true
+general:
+  debug: false
+  instance_name: Chimera SearXNG
+  enable_metrics: false
+search:
+  safe_search: 1
+  autocomplete: ""
+  default_lang: "en"
+server:
+  base_url: "http://localhost:8888/"
+  secret_key: "changeme-rotate-in-env"
+ui:
+  static_use_hash: true
+engines:
+  - name: duckduckgo
+    enabled: true
+  - name: bing
+    enabled: false
+  - name: google
+    enabled: false
+  - name: arxiv
+    enabled: true
+  - name: github
+    enabled: true

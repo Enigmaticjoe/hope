@@ -201,6 +201,11 @@ After deployment, access your services at:
 6. Configure Home Assistant integrations
 7. Set up Uptime Kuma monitors for your services
 
+## 🧠 Unified AI Ecosystem (Brain + Brawn)
+
+For the Pop!_OS brain stack (vLLM + Ollama + Open WebUI + RAG + Voice) and integration with Unraid:
+- **[CHIMERA-UNIFIED.md](../CHIMERA-UNIFIED.md)**
+
 ## 🤝 Support
 
 For issues or questions:
