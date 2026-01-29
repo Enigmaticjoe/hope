@@ -1,15 +1,51 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE_DIR="${SOURCE_DIR:-/boot/config/plugins/chimera/deployment}"
+# Auto-detect the unraid-deployment directory.
+# SOURCE_DIR must point to the directory containing stacks/ and env-templates/.
+# When the repo is cloned, stacks live at <repo>/unraid-deployment/stacks/.
+if [[ -n "${SOURCE_DIR:-}" ]]; then
+  : # User explicitly set SOURCE_DIR, use it
+elif [[ -d "/boot/config/plugins/chimera/deployment/unraid-deployment/stacks" ]]; then
+  # Repo cloned to /boot/config/plugins/chimera/deployment (recommended)
+  SOURCE_DIR="/boot/config/plugins/chimera/deployment/unraid-deployment"
+elif [[ -d "/boot/config/plugins/chimera/deployment/stacks" ]]; then
+  # Just the unraid-deployment dir was copied here
+  SOURCE_DIR="/boot/config/plugins/chimera/deployment"
+elif [[ -d "/mnt/user/appdata/chimera/unraid-deployment/stacks" ]]; then
+  SOURCE_DIR="/mnt/user/appdata/chimera/unraid-deployment"
+elif [[ -d "/tmp/chimera/unraid-deployment/stacks" ]]; then
+  SOURCE_DIR="/tmp/chimera/unraid-deployment"
+else
+  SOURCE_DIR="/boot/config/plugins/chimera/deployment/unraid-deployment"
+fi
+
 TARGET_DIR="/boot/config/plugins/chimera/portainer"
 
 if [[ ! -d "${SOURCE_DIR}/stacks" ]]; then
-  echo "Missing stacks directory: ${SOURCE_DIR}/stacks"
-  echo "Set SOURCE_DIR to the location of the unraid-deployment repo."
+  echo "ERROR: Cannot find stacks directory."
+  echo ""
+  echo "The script looked in:"
+  echo "  - /boot/config/plugins/chimera/deployment/unraid-deployment/stacks"
+  echo "  - /boot/config/plugins/chimera/deployment/stacks"
+  echo "  - /mnt/user/appdata/chimera/unraid-deployment/stacks"
+  echo "  - /tmp/chimera/unraid-deployment/stacks"
+  echo ""
+  echo "To fix this, clone the repo to the Unraid flash drive:"
+  echo ""
+  echo "  mkdir -p /boot/config/plugins/chimera"
+  echo "  git clone https://github.com/Enigmaticjoe/hope.git /boot/config/plugins/chimera/deployment"
+  echo ""
+  echo "Or set SOURCE_DIR to point directly at the unraid-deployment directory:"
+  echo ""
+  echo "  SOURCE_DIR=/path/to/hope/unraid-deployment"
+  echo ""
   exit 1
 fi
 
+echo "Source: ${SOURCE_DIR}"
+echo "Target: ${TARGET_DIR}"
+echo ""
 echo "Syncing Portainer stacks to ${TARGET_DIR}..."
 
 mkdir -p "${TARGET_DIR}/stacks" "${TARGET_DIR}/env"
@@ -17,6 +53,9 @@ mkdir -p "${TARGET_DIR}/stacks" "${TARGET_DIR}/env"
 cp -v "${SOURCE_DIR}/stacks/"*.yml "${TARGET_DIR}/stacks/"
 cp -rv "${SOURCE_DIR}/env-templates/"* "${TARGET_DIR}/env/"
 
+echo ""
 echo "Sync complete."
 echo "Stacks: ${TARGET_DIR}/stacks"
 echo "Env templates: ${TARGET_DIR}/env"
+echo ""
+echo "Next: Open Portainer -> Stacks -> Add stack -> use files from ${TARGET_DIR}/stacks/"
