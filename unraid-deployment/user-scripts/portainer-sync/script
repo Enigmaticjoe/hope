@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE_DIR="${SOURCE_DIR:-/boot/config/plugins/chimera/deployment}"
+TARGET_DIR="/boot/config/plugins/chimera/portainer"
+
+if [[ ! -d "${SOURCE_DIR}/stacks" ]]; then
+  echo "Missing stacks directory: ${SOURCE_DIR}/stacks"
+  echo "Set SOURCE_DIR to the location of the unraid-deployment repo."
+  exit 1
+fi
+
+echo "Syncing Portainer stacks to ${TARGET_DIR}..."
+
+mkdir -p "${TARGET_DIR}/stacks" "${TARGET_DIR}/env"
+
+cp -v "${SOURCE_DIR}/stacks/"*.yml "${TARGET_DIR}/stacks/"
+cp -v "${SOURCE_DIR}/env-templates/." "${TARGET_DIR}/env/"
+
+echo "Sync complete."
+echo "Stacks: ${TARGET_DIR}/stacks"
+echo "Env templates: ${TARGET_DIR}/env"

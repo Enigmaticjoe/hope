@@ -49,6 +49,8 @@ Edit each `.env.*` file with your specific values (API keys, paths, etc.). For t
    - `moltbot.yml` → `.env.moltbot`
 3. Deploy in order: **infrastructure → media → ai-core → home-automation → agentic → moltbot**.
 
+**Unraid-local option:** Use the **Chimera Portainer Sync** User Script to copy stack files and env templates into `/boot/config/plugins/chimera/portainer` so Portainer reads from the Unraid flash instead of external Git. See `portainer/README.md`.
+
 ### 5. Post-Deploy (User Scripts)
 Use the User Scripts plugin to run the Chimera media configurator:
 ```bash
