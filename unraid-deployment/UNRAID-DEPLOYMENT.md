@@ -119,6 +119,28 @@ This stack powers your automated bidding and web scraping workflows.
 * **Home Assistant:** `http://UNRAID_IP:8123`.
 * **Zigbee:** Your diagnostics did not explicitly show a plugged-in Zigbee USB stick (only a UPS and peripherals). If you are using a network-based coordinator (like a SLZB-06), configure Zigbee2MQTT to point to its IP. If using a USB stick, ensure it is passed through in the YAML (`/dev/ttyUSB0`).
 
+### f. Moltbot Stack (Local-First Agent Control Plane)
+**File:** `stacks/moltbot.yml`
+
+**Purpose:** Host the Moltbot Gateway and Canvas UI on Unraid for local-first automation. The gateway binds to `:18789` and Canvas UI to `:18793` by default.
+
+**Deploy with Portainer:**
+1. Add a new stack from `stacks/moltbot.yml`.
+2. Load `.env.moltbot` for paths and ports.
+
+**First-run onboarding (one-time):**
+```bash
+docker exec -it moltbot moltbot onboard
+```
+
+**Latency option (host networking):** If you want zero NAT overhead, switch the service to `network_mode: host` and remove the `ports:` block in `stacks/moltbot.yml`.
+
+**Verify:**
+* **Gateway:** `ws://UNRAID_IP:18789`
+* **Canvas:** `http://UNRAID_IP:18793`
+
+**Security stance:** Keep the gateway bound to localhost and tunnel in via Tailscale or SSH if you need remote access. If you must expose it, put it behind Cloudflare Access and a strong token.
+
 ---
 
 ## 3. Post-Deployment Checklist
@@ -181,6 +203,10 @@ Use this list if you need to reassign ports before deployment:
 - Node-RED: `1880`
 - Zigbee2MQTT: `8080`
 - ESPHome: `6052`
+
+**Moltbot**
+- Gateway (WebSocket): `${MOLTBOT_PORT:-18789}`
+- Canvas UI: `${MOLTBOT_CANVAS_PORT:-18793}`
 
 Deploy clean or fix conflicts before you launch stacks.
 
