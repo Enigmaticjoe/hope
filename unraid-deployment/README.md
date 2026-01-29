@@ -47,6 +47,8 @@ Edit each `.env.*` file with your specific values (API keys, paths, etc.). For t
    - `agentic.yml` → `.env.agentic`
 3. Deploy in order: **infrastructure → media → ai-core → home-automation → agentic**.
 
+**Unraid-local option:** Use the **Chimera Portainer Sync** User Script to copy stack files and env templates into `/boot/config/plugins/chimera/portainer` so Portainer reads from the Unraid flash instead of external Git. See `portainer/README.md`.
+
 ### 5. Post-Deploy (User Scripts)
 Use the User Scripts plugin to run the Chimera media configurator:
 ```bash
@@ -200,6 +202,11 @@ After deployment, access your services at:
 5. Install Ollama models: `docker exec ollama ollama pull llama2`
 6. Configure Home Assistant integrations
 7. Set up Uptime Kuma monitors for your services
+
+## 🧠 Unified AI Ecosystem (Brain + Brawn)
+
+For the Pop!_OS brain stack (vLLM + Ollama + Open WebUI + RAG + Voice) and integration with Unraid:
+- **[CHIMERA-UNIFIED.md](../CHIMERA-UNIFIED.md)**
 
 ## 🤝 Support
 

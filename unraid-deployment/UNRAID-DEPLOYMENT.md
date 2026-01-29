@@ -33,6 +33,7 @@ All stacks are designed for **Portainer** on Unraid. Portainer is the primary de
 1. Install **Portainer CE** from Unraid Apps.
 2. Install **User Scripts** plugin from Unraid Apps.
 3. Enable Docker and confirm `/var/run/docker.sock` exists.
+4. (Optional) Use the **Chimera Portainer Sync** User Script to copy stack files and env templates to `/boot/config/plugins/chimera/portainer` for fully Unraid-local deployments.
 
 **Recommended preflight:**
 ```bash
