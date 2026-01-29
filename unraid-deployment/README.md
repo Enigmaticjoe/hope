@@ -26,6 +26,7 @@ cp env-templates/.env.media .env.media
 cp env-templates/.env.ai-core .env.ai-core
 cp env-templates/.env.home-automation .env.home-automation
 cp env-templates/.env.agentic .env.agentic
+cp env-templates/.env.moltbot .env.moltbot
 ```
 
 Edit each `.env.*` file with your specific values (API keys, paths, etc.). For the Unraid API, set `UNRAID_API_KEY` in `.env.infrastructure`.
@@ -45,7 +46,8 @@ Edit each `.env.*` file with your specific values (API keys, paths, etc.). For t
    - `ai-core.yml` → `.env.ai-core` (use profile selection in Portainer)
    - `home-automation.yml` → `.env.home-automation`
    - `agentic.yml` → `.env.agentic`
-3. Deploy in order: **infrastructure → media → ai-core → home-automation → agentic**.
+   - `moltbot.yml` → `.env.moltbot`
+3. Deploy in order: **infrastructure → media → ai-core → home-automation → agentic → moltbot**.
 
 **Unraid-local option:** Use the **Chimera Portainer Sync** User Script to copy stack files and env templates into `/boot/config/plugins/chimera/portainer` so Portainer reads from the Unraid flash instead of external Git. See `portainer/README.md`.
 
@@ -157,6 +159,9 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 - **Browserless** - Headless Chrome for web automation
 - **Cloudflared** - Cloudflare Tunnel ingress
 
+### Moltbot Stack
+- **Moltbot Gateway** - Local-first agent control plane (WebSocket + Canvas UI)
+
 ## 📚 Documentation
 
 For complete setup instructions, configuration details, and troubleshooting:
@@ -191,6 +196,8 @@ After deployment, access your services at:
 - Plex: http://192.168.1.9:32400/web
 - Open WebUI (AI): http://192.168.1.9:3000
 - Home Assistant: http://192.168.1.9:8123
+- Moltbot Gateway: ws://192.168.1.9:18789
+- Moltbot Canvas: http://192.168.1.9:18793
 - And more! (See homepage dashboard for all links)
 
 ## 📝 Next Steps

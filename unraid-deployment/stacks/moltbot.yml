@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  moltbot:
+    image: node:22-bullseye
+    container_name: moltbot
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - MOLTBOT_HOME=/data
+      - NODE_ENV=production
+    volumes:
+      - ${APPDATA_PATH}/moltbot:/data
+    ports:
+      - "${MOLTBOT_PORT:-18789}:18789"
+      - "${MOLTBOT_CANVAS_PORT:-18793}:18793"
+    command: >-
+      sh -c "npm install -g moltbot@latest &&
+      moltbot gateway --config /data/moltbot.json"

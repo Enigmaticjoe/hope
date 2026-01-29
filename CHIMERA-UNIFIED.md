@@ -128,82 +128,7 @@ Then route Home Assistant intents to the Brain API:
 
 ---
 
-## 6) Moltbot (Clawdbot) Integration — Where It Lives
-
-**Decision:** Run Moltbot Gateway on **The Brain (Pop!_OS)**.  
-Rationale: it must stay loopback-first, talk to vLLM/Ollama locally, and stay close to the ROCm stack.  
-Use **The Brawn (Unraid)** only for node workloads (storage, media actions) if you need an agent on that box.
-
-**Ports (Gateway defaults):**
-- Gateway WebSocket: `ws://127.0.0.1:18789`
-- Canvas/host UI: `http://127.0.0.1:18793`
-
-### 6.1 Install (Brain)
-```bash
-# Node.js 22+ required
-node -v
-npm install -g moltbot@latest
-
-# Baseline health check
-moltbot doctor
-```
-
-### 6.2 Minimal config (Brain)
-Copy the example config:
-```bash
-mkdir -p ~/.moltbot
-cp ./brain-config/moltbot/moltbot.json.example ~/.moltbot/moltbot.json
-```
-
-`~/.moltbot/moltbot.json`:
-```json
-{
-  "gateway": {
-    "bind": "127.0.0.1",
-    "port": 18789
-  },
-  "canvas": {
-    "enabled": true,
-    "port": 18793
-  },
-  "llm": {
-    "provider": "openai-compatible",
-    "baseUrl": "http://127.0.0.1:8000/v1",
-    "model": "dolphin-mistral"
-  },
-  "ollama": {
-    "baseUrl": "http://127.0.0.1:11434"
-  }
-}
-```
-
-### 6.3 Run as a user service (Brain)
-```bash
-cat > ~/.config/systemd/user/moltbot.service <<'EOF'
-[Unit]
-Description=Moltbot Gateway
-After=network-online.target
-
-[Service]
-Type=simple
-Environment=NODE_OPTIONS=--max-old-space-size=4096
-ExecStart=%h/.local/share/pnpm/moltbot gateway
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=default.target
-EOF
-
-systemctl --user daemon-reload
-systemctl --user enable --now moltbot.service
-```
-
-> If you installed via npm instead of pnpm, change the `ExecStart` path to your npm global bin location (`command -v moltbot`).
-
----
-
-## 7) Operational Guardrails (Non-Negotiable)
+## 6) Operational Guardrails (Non-Negotiable)
 
 - **Docker socket permissions:** verify `docker` group membership.
 - **GPU availability:** check `rocm-smi` if containers can’t start.
@@ -213,7 +138,7 @@ systemctl --user enable --now moltbot.service
 
 ---
 
-## 8) What’s Next
+## 7) What’s Next
 
 Pick a direction:
 1) **Validate the Brain stack** (best first move).
