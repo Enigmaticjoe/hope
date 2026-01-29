@@ -81,7 +81,29 @@ cp .env.brain.example .env
 docker compose up -d
 ```
 
-### 3.4 Bare-Metal vLLM (Port 8000)
+### 3.4 Brain Stack (Docker Swarm)
+Swarm gives you restart policies, node labels, and stack deployment with a single command. This is **single-node** by default but ready for expansion.
+
+**Initialize Swarm + deploy stack (recommended):**
+```bash
+./scripts/swarm-init.sh
+```
+
+**Manual Swarm deploy (explicit control):**
+```bash
+docker swarm init --advertise-addr <brain-ip>
+docker node update --label-add chimera.role=brain $(docker info --format '{{.Swarm.NodeID}}')
+set -a && source .env && set +a
+docker stack deploy -c swarm/chimera-brain-stack.yml chimera-brain
+```
+
+**Notes:**
+- Stack file: `swarm/chimera-brain-stack.yml`
+- Uses `node.labels.chimera.role == brain` for placement.
+- Keep `HSA_OVERRIDE_GFX_VERSION=11.0.0` for ROCm stability.
+- Run from repo root so `.env` and relative bind mounts resolve (`./brain-config/...`).
+
+### 3.5 Bare-Metal vLLM (Port 8000)
 Use your existing vLLM install with ROCm. Keep model size ≤27B (AWQ/GPTQ). Do not attempt 70B on 20GB VRAM.
 
 Example (adjust model path):
