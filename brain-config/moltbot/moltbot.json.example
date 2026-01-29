@@ -1,6 +1,6 @@
 {
   "gateway": {
-    "bind": "127.0.0.1",
+    "bind": "0.0.0.0",
     "port": 18789
   },
   "canvas": {
@@ -9,10 +9,10 @@
   },
   "llm": {
     "provider": "openai-compatible",
-    "baseUrl": "http://127.0.0.1:8000/v1",
+    "baseUrl": "http://host.docker.internal:8000/v1",
     "model": "dolphin-mistral"
   },
   "ollama": {
-    "baseUrl": "http://127.0.0.1:11434"
+    "baseUrl": "http://host.docker.internal:11434"
   }
 }

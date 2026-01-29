@@ -11,13 +11,15 @@ These files are meant to **live on the Unraid host** so Portainer can deploy sta
 │  ├─ media.yml
 │  ├─ ai-core.yml
 │  ├─ home-automation.yml
-│  └─ agentic.yml
+│  ├─ agentic.yml
+│  └─ moltbot.yml
 └─ env/
    ├─ .env.infrastructure
    ├─ .env.media
    ├─ .env.ai-core
    ├─ .env.home-automation
-   └─ .env.agentic
+   ├─ .env.agentic
+   └─ .env.moltbot
 ```
 
 ## Deploy Flow (Portainer)

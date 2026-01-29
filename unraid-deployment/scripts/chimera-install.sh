@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ENV_TEMPLATES_DIR="${ROOT_DIR}/env-templates"
 STACKS_DIR="${ROOT_DIR}/stacks"
 
-STACKS_DEFAULT=(infrastructure media ai-core home-automation agentic)
+STACKS_DEFAULT=(infrastructure media ai-core home-automation agentic moltbot)
 
 DRY_RUN=false
 TARGET_STACK="all"
@@ -98,7 +98,7 @@ ensure_appdata_dirs() {
     zurg rdt-client
     ollama openwebui qdrant
     homeassistant mosquitto nodered zigbee2mqtt esphome
-    n8n
+    n8n moltbot
   )
   for dir in "${dirs[@]}"; do
     run_cmd mkdir -p "${appdata_path}/${dir}"
@@ -127,7 +127,6 @@ check_compose() {
 
 check_ports() {
   require_command ss
-  require_command rg
   local homepage_port="${HOMEPAGE_PORT:-8008}"
   local browserless_port="${BROWSERLESS_PORT:-3005}"
   local ports=(
@@ -147,7 +146,7 @@ check_ports() {
       continue
     fi
     seen["${port}"]=1
-    if ss -tulpn | rg -q ":${port}\\b"; then
+    if ss -tulpn | grep -qE ":${port}[[:space:]]|:${port}$"; then
       if [[ "${port}" == "9000" ]]; then
         echo "WARN: Port 9000 is in use (expected if Portainer is running)." >&2
       else
@@ -170,7 +169,7 @@ validate_env_files() {
 
 ensure_ai_grid_network() {
   local network_name=${AI_GRID_NETWORK:-ai_grid}
-  if ! docker network ls --format '{{.Name}}' | rg -q "^${network_name}$"; then
+  if ! docker network ls --format '{{.Name}}' | grep -q "^${network_name}$"; then
     log "BOOTSTRAP" "Creating docker network ${network_name}"
     run_cmd docker network create "${network_name}"
   fi

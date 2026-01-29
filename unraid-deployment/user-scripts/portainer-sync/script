@@ -15,7 +15,7 @@ echo "Syncing Portainer stacks to ${TARGET_DIR}..."
 mkdir -p "${TARGET_DIR}/stacks" "${TARGET_DIR}/env"
 
 cp -v "${SOURCE_DIR}/stacks/"*.yml "${TARGET_DIR}/stacks/"
-cp -v "${SOURCE_DIR}/env-templates/." "${TARGET_DIR}/env/"
+cp -rv "${SOURCE_DIR}/env-templates/"* "${TARGET_DIR}/env/"
 
 echo "Sync complete."
 echo "Stacks: ${TARGET_DIR}/stacks"

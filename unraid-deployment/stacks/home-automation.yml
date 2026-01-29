@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:stable
@@ -27,6 +26,8 @@ services:
     image: nodered/node-red:latest
     container_name: nodered
     restart: unless-stopped
+    environment:
+      - TZ=${TZ}
     ports:
       - "1880:1880"
     volumes:
@@ -55,6 +56,8 @@ services:
     image: esphome/esphome:latest
     container_name: esphome
     restart: unless-stopped
+    environment:
+      - TZ=${TZ}
     ports:
       - "6052:6052"
     volumes:

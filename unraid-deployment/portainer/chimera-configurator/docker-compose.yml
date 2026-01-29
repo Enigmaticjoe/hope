@@ -11,8 +11,6 @@
 #
 # To run again: Restart the container or redeploy the stack
 
-version: "3.8"
-
 services:
   chimera-configurator:
     build:

@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   ollama:
     image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
@@ -42,9 +41,6 @@ services:
       - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-5m}
     volumes:
       - ${APPDATA_PATH}/ollama:/root/.ollama
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
     group_add:
       - video
       - render
