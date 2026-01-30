@@ -119,7 +119,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ### Infrastructure Stack
 - **Tailscale** - Secure VPN access to your network
 - **Homepage** - Unified dashboard for all services
-- **Unraid API** - Programmatic access to Unraid My Servers API
+- **Unraid API** - Programmatic access to Unraid My Servers API (override image tag with `UNRAID_API_IMAGE` if GHCR tag changes)
 - **Uptime Kuma** - Service monitoring
 - **Dozzle** - Real-time log viewer
 - **Watchtower** - Automatic container updates
