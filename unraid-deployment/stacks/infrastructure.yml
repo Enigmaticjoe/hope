@@ -32,7 +32,7 @@ services:
       - PGID=${PGID}
 
   unraid-api:
-    image: ghcr.io/unraid/unraid-api:latest
+    image: ${UNRAID_API_IMAGE:-ghcr.io/unraid/unraid-api:latest}
     container_name: unraid-api
     restart: unless-stopped
     environment:
