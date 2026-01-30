@@ -72,9 +72,21 @@ This sets up your "Netflix-like" streaming experience.
 
 **Configuration Notes:**
 * **Plex Transcoding:** Since your CPU has no iGPU, enable **hardware transcoding** for the RTX 4070. Ensure `/dev/dri` is passed through (set `PLEX_DRI_DEVICE=/dev/dri` in `.env.media`). In Plex Settings > Transcoder, enable hardware acceleration.
-* **Real-Debrid (Zurg):** This service mounts your Real-Debrid torrents to `/mnt/user/realdebrid`. Ensure your `RD_API_KEY` is correct in `.env.media`.
-* **Rdt-Client:** Runs on `:6500` and is used as the Real-Debrid download client for Sonarr/Radarr.
-* **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the Zurg mount or your local `downloads` share on the cache.
+* **Debrid Unlimited Media Bridge (DUMB):** Install via **Community Apps** (not in `media.yml`). This replaces Zurg/Rdt-Client. DUMB mounts Real-Debrid to `/mnt/user/realdebrid` and exposes unified debrid tooling.
+* **Arr Suite:** Sonarr (`:8989`) and Radarr (`:7878`) should be configured to send downloads to the DUMB Real-Debrid mount or your local `downloads` share on the cache.
+
+**DUMB (Community Apps) install + config**
+1. **Community Apps → Search**: `DUMB` (Debrid Unlimited Media Bridge).
+2. **Networking**: Prefer **Host** mode (DUMB bundles multiple services/tools).
+3. **Paths** (keep `/mnt/user/appdata` intact):
+   - `/config` → `/mnt/user/appdata/dumb`
+   - `/data/media` → `/mnt/user/media`
+   - `/data/realdebrid` → `/mnt/user/realdebrid`
+4. **Required env vars**:
+   - `PUID=99` / `PGID=100` (Unraid default)
+   - `TZ=America/Your_TZ`
+   - `RD_API_KEY=your_real_debrid_key`
+5. **Optional**: Enable `/dev/fuse` if the template exposes it.
 
 **Verify:**
 * **Plex:** `http://UNRAID_IP:32400`
