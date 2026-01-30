@@ -46,6 +46,26 @@ Edit each `.env.*` file with your specific values (API keys, paths, etc.). For t
 
 **Unraid-local option:** Use the **Chimera Portainer Sync** User Script to copy stack files and env templates into `/boot/config/plugins/chimera/portainer` so Portainer reads from the Unraid flash instead of external Git. See `portainer/README.md`.
 
+### 4B. Dumb Stack (Registry-Safe Media Deploy)
+Use this when GHCR pulls are blocked (e.g., `denied` / `manifest unknown`). The dumb stack pins Rdt-Client to Docker Hub and keeps everything else unchanged.
+
+**Instructions:**
+1. Copy the media env template and fill in values.
+2. Deploy `stacks/media.yml` with `.env.media` in Portainer.
+
+**Required env variables (.env.media):**
+```bash
+PUID=1000
+PGID=1000
+TZ=America/New_York
+APPDATA_PATH=/mnt/user/appdata
+MEDIA_PATH=/mnt/user/media
+PLEX_CLAIM=
+PLEX_DRI_DEVICE=/dev/dri
+RD_API_KEY=
+REALDEBRID_MOUNT=/mnt/user/realdebrid
+```
+
 ### 5. Post-Deploy (User Scripts)
 Use the User Scripts plugin to run the Chimera media configurator:
 ```bash
@@ -119,7 +139,7 @@ cp configs/homepage-dashboard.yaml /mnt/user/appdata/homepage/config.yml
 ### Infrastructure Stack
 - **Tailscale** - Secure VPN access to your network
 - **Homepage** - Unified dashboard for all services
-- **Unraid API** - Programmatic access to Unraid My Servers API
+- **Unraid API** - Programmatic access to Unraid My Servers API (override image tag with `UNRAID_API_IMAGE` if GHCR tag changes)
 - **Uptime Kuma** - Service monitoring
 - **Dozzle** - Real-time log viewer
 - **Watchtower** - Automatic container updates
