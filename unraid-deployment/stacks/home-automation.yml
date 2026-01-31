@@ -38,7 +38,7 @@ services:
       - ${APPDATA_PATH}/zigbee2mqtt:/app/data
     ports:
       - "8080:8080"
-    devices:
+    # devices:
       # If using a USB Zigbee coordinator, uncomment and set the correct device:
       # - /dev/ttyUSB0:/dev/ttyUSB0
 
