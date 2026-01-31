@@ -1,15 +1,5 @@
 services:
-  homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:stable
-    container_name: homeassistant
-    restart: unless-stopped
-    network_mode: host
-    environment:
-      - TZ=${TZ}
-    volumes:
-      - ${APPDATA_PATH}/homeassistant:/config
-      # If using a USB Zigbee/Z-Wave stick, uncomment and set the correct device:
-      # - /dev/ttyUSB0:/dev/ttyUSB0
+  # Home Assistant runs bare metal at 192.168.1.149 (do not deploy in this stack).
 
   mosquitto:
     image: eclipse-mosquitto:latest
