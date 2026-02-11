@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fedora User Scripts</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- CodeMirror via CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/dracula.min.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>Fedora User Scripts</h1>
+      <p class="subtitle">Manage &amp; schedule your bash scripts</p>
+    </div>
+  </header>
+
+  <main>
+    <!-- Script list panel -->
+    <section id="script-list-panel">
+      <div class="panel-header">
+        <h2>Scripts</h2>
+        <button id="btn-new" class="btn btn-primary" title="New Script">+ New Script</button>
+      </div>
+      <ul id="script-list"></ul>
+      <div id="empty-state" class="empty-state">
+        <p>No scripts yet. Click <strong>+ New Script</strong> to get started.</p>
+      </div>
+    </section>
+
+    <!-- Editor / detail panel -->
+    <section id="editor-panel" class="hidden">
+      <div class="panel-header">
+        <div class="script-info">
+          <input id="script-name" type="text" placeholder="Script name" maxlength="120">
+          <input id="script-desc" type="text" placeholder="Description (optional)" maxlength="250">
+        </div>
+        <div class="panel-actions">
+          <button id="btn-save" class="btn btn-primary">Save</button>
+          <button id="btn-run" class="btn btn-success">Run</button>
+          <button id="btn-delete" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+
+      <!-- Schedule row -->
+      <div class="schedule-row">
+        <label for="schedule-select">Schedule:</label>
+        <select id="schedule-select">
+          <option value="">Disabled (manual only)</option>
+          <option value="*/5 * * * *">Every 5 minutes</option>
+          <option value="*/15 * * * *">Every 15 minutes</option>
+          <option value="*/30 * * * *">Every 30 minutes</option>
+          <option value="0 * * * *">Hourly</option>
+          <option value="0 */6 * * *">Every 6 hours</option>
+          <option value="0 */12 * * *">Every 12 hours</option>
+          <option value="0 0 * * *">Daily at midnight</option>
+          <option value="0 0 * * 0">Weekly (Sunday midnight)</option>
+          <option value="0 0 1 * *">Monthly (1st at midnight)</option>
+          <option value="@reboot">At startup / reboot</option>
+          <option value="custom">Custom cron expression…</option>
+        </select>
+        <input id="schedule-custom" type="text" class="hidden" placeholder="e.g. */10 * * * *">
+        <button id="btn-schedule" class="btn btn-secondary">Apply Schedule</button>
+        <span id="schedule-status" class="schedule-status"></span>
+      </div>
+
+      <!-- Code editor -->
+      <div id="editor-container">
+        <textarea id="code-editor"></textarea>
+      </div>
+
+      <!-- Output console -->
+      <div id="output-section" class="hidden">
+        <div class="output-header">
+          <h3>Output</h3>
+          <button id="btn-stop" class="btn btn-danger btn-sm hidden">Stop</button>
+          <button id="btn-clear-output" class="btn btn-secondary btn-sm">Clear</button>
+        </div>
+        <pre id="output-console"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/shell/shell.min.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
