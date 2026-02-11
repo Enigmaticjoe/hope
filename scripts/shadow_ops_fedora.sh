@@ -74,20 +74,23 @@ fi
 echo -e "${YELLOW}[3/5]${NC} Deploying Kali Wallpaper..."
 mkdir -p "$WALLPAPER_DIR"
 # Try primary URL, fallback if needed
-if ! wget -qO "$WALLPAPER_DIR/kali-dragon.png" "https://gitlab.com/kalilinux/packages/kali-wallpapers/-/raw/kali/master/2024.1/backgrounds/kali/kali-2024.1-16x9.png" 2>/dev/null; then
-    # Fallback: download SVG with correct extension
-    if wget -qO "$WALLPAPER_DIR/kali-dragon.svg" "https://www.kali.org/images/kali-dragon-icon.svg" 2>/dev/null; then
-        # If imagemagick is available, convert to PNG, otherwise use SVG
+WALLPAPER_FILE="$WALLPAPER_DIR/kali-dragon.png"
+if ! wget -qO "$WALLPAPER_FILE" "https://gitlab.com/kalilinux/packages/kali-wallpapers/-/raw/kali/master/2024.1/backgrounds/kali/kali-2024.1-16x9.png" 2>/dev/null; then
+    # Fallback: download SVG
+    WALLPAPER_FILE="$WALLPAPER_DIR/kali-dragon.svg"
+    if wget -qO "$WALLPAPER_FILE" "https://www.kali.org/images/kali-dragon-icon.svg" 2>/dev/null; then
+        # If imagemagick is available, convert to PNG
         if command -v convert &> /dev/null; then
-            convert "$WALLPAPER_DIR/kali-dragon.svg" "$WALLPAPER_DIR/kali-dragon.png" 2>/dev/null && \
-            rm "$WALLPAPER_DIR/kali-dragon.svg" || \
-            mv "$WALLPAPER_DIR/kali-dragon.svg" "$WALLPAPER_DIR/kali-dragon.png"
-        else
-            # Just rename if no conversion tool available (GNOME can handle SVG)
-            mv "$WALLPAPER_DIR/kali-dragon.svg" "$WALLPAPER_DIR/kali-dragon.png"
+            if convert "$WALLPAPER_FILE" "$WALLPAPER_DIR/kali-dragon.png" 2>/dev/null; then
+                rm "$WALLPAPER_FILE"
+                WALLPAPER_FILE="$WALLPAPER_DIR/kali-dragon.png"
+            fi
+            # If conversion failed, keep the SVG file
         fi
+        # GNOME handles both PNG and SVG, so either is fine
     else
         echo -e "   ${YELLOW}[!]${NC} Wallpaper download failed - using system default"
+        WALLPAPER_FILE=""
     fi
 fi
 
@@ -178,8 +181,10 @@ echo -e "${YELLOW}[5/5]${NC} Applying GNOME theme settings..."
 if command -v gsettings &> /dev/null; then
     sudo -u "$REAL_USER" gsettings set org.gnome.desktop.interface gtk-theme 'Materia-dark'
     sudo -u "$REAL_USER" gsettings set org.gnome.desktop.interface icon-theme 'Flat-Remix-Blue-Dark'
-    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.background picture-uri "file://$WALLPAPER_DIR/kali-dragon.png"
-    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.background picture-uri-dark "file://$WALLPAPER_DIR/kali-dragon.png"
+    if [ -n "$WALLPAPER_FILE" ]; then
+        sudo -u "$REAL_USER" gsettings set org.gnome.desktop.background picture-uri "file://$WALLPAPER_FILE"
+        sudo -u "$REAL_USER" gsettings set org.gnome.desktop.background picture-uri-dark "file://$WALLPAPER_FILE"
+    fi
 fi
 
 # ==============================================================================
@@ -235,8 +240,10 @@ if [ ${#UNAVAILABLE_TOOLS[@]} -gt 0 ]; then
 fi
 
 # Inform about Metasploit if not installed
+# Note: Metasploit is intentionally not in the package list above
+# It requires manual installation from Rapid7's repository
 if ! command -v msfconsole &> /dev/null; then
-    echo -e "   ${YELLOW}[!]${NC} Metasploit not installed - requires manual install from: https://www.rapid7.com/products/metasploit/download/"
+    echo -e "   ${YELLOW}[INFO]${NC} Metasploit Framework requires manual installation from: https://www.rapid7.com/products/metasploit/download/"
 fi
 
 # Install Python security libraries
