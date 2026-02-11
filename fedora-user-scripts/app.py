@@ -24,6 +24,12 @@ from cron_manager import CronManager
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
+# Detect deployment mode
+# ---------------------------------------------------------------------------
+IS_CONTAINER = os.path.exists("/.dockerenv") or os.environ.get("FUS_CONTAINER") == "1"
+HOST_ROOT = os.environ.get("FUS_HOST_ROOT", "")  # e.g. "/host" in host-access mode
+
+# ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 SCRIPTS_DIR = Path(
@@ -93,6 +99,21 @@ def _list_scripts() -> list[dict]:
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
+
+
+@app.route("/api/info")
+def api_info():
+    return jsonify({
+        "version": "1.0.0",
+        "container": IS_CONTAINER,
+        "host_access": bool(HOST_ROOT),
+        "scripts_dir": str(SCRIPTS_DIR),
+    })
 
 
 # ---------------------------------------------------------------------------

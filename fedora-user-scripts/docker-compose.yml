@@ -1,0 +1,87 @@
+# =============================================================================
+# Fedora User Scripts — Portainer Stack
+# =============================================================================
+# Deploy via Portainer: Stacks → Add Stack → Upload/Paste this file
+#
+# For the Shadow Ops script to modify the HOST (install packages, change
+# themes, etc.), the container needs host-level access. Two deployment
+# modes are provided below — pick one by commenting/uncommenting.
+# =============================================================================
+
+services:
+  # =========================================================================
+  # MODE 1: Standard (default) — scripts run INSIDE the container
+  # Good for: self-contained automation, cron jobs, file processing
+  # =========================================================================
+  fedora-user-scripts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chimera/fedora-user-scripts:latest
+    container_name: fedora-user-scripts
+    restart: unless-stopped
+    ports:
+      - "${FUS_PORT:-9855}:9855"
+    volumes:
+      # Persistent script storage
+      - fus-scripts:/data/scripts
+      # Optional: mount host directories scripts may need to access
+      # - /home:/host/home:rw
+      # - /etc:/host/etc:ro
+    environment:
+      - FUS_PORT=9855
+      - FUS_SCRIPTS_DIR=/data/scripts
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9855/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.chimera.service=fedora-user-scripts"
+      - "com.chimera.role=script-manager"
+
+  # =========================================================================
+  # MODE 2: Host Access — scripts can modify the HOST system
+  # Good for: Shadow Ops, system configuration, package installation
+  # WARNING: This gives the container full host access. Only use on
+  #          trusted networks with trusted scripts.
+  #
+  # To use: comment out the service above and uncomment this one.
+  # =========================================================================
+  # fedora-user-scripts:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: chimera/fedora-user-scripts:latest
+  #   container_name: fedora-user-scripts
+  #   restart: unless-stopped
+  #   privileged: true
+  #   network_mode: host
+  #   pid: host
+  #   volumes:
+  #     - fus-scripts:/data/scripts
+  #     # Mount the full host filesystem so scripts can modify the host
+  #     - /:/host:rw
+  #     # Share host's package manager and systemd
+  #     - /var/run/dbus:/var/run/dbus
+  #     - /run/systemd:/run/systemd
+  #   environment:
+  #     - FUS_PORT=9855
+  #     - FUS_SCRIPTS_DIR=/data/scripts
+  #     # Tell scripts they're running in host-access mode
+  #     - FUS_HOST_ROOT=/host
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-sf", "http://localhost:9855/"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 10s
+  #   labels:
+  #     - "com.chimera.service=fedora-user-scripts"
+  #     - "com.chimera.role=script-manager"
+  #     - "com.chimera.mode=host-access"
+
+volumes:
+  fus-scripts:
+    driver: local

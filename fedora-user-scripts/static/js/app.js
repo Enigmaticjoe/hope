@@ -248,7 +248,26 @@
     }
   });
 
+  // ---- Deployment info badge ----
+  async function loadInfo() {
+    try {
+      const info = await api("/api/info");
+      const $badge = document.getElementById("deploy-badge");
+      if (info.container && info.host_access) {
+        $badge.textContent = "Docker (Host Access)";
+        $badge.className = "badge badge-host";
+      } else if (info.container) {
+        $badge.textContent = "Docker";
+        $badge.className = "badge badge-container";
+      } else {
+        $badge.textContent = "Native";
+        $badge.className = "badge badge-native";
+      }
+    } catch { /* ignore */ }
+  }
+
   // ---- Boot ----
   initEditor();
   refreshList();
+  loadInfo();
 })();

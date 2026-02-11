@@ -37,8 +37,35 @@ header {
   border-bottom: 2px solid var(--border);
 }
 .header-inner { max-width: 1400px; margin: 0 auto; }
+.header-title-row { display: flex; align-items: center; gap: .65rem; }
 header h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
 .subtitle { color: rgba(255,255,255,.75); font-size: .85rem; margin-top: .15rem; }
+
+/* Deployment badge */
+.badge {
+  display: inline-block;
+  padding: .15rem .55rem;
+  border-radius: 10px;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.badge-container {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.35);
+}
+.badge-host {
+  background: rgba(46,194,126,.3);
+  color: #a6e3a1;
+  border: 1px solid rgba(46,194,126,.5);
+}
+.badge-native {
+  background: rgba(229,165,10,.3);
+  color: #fce94f;
+  border: 1px solid rgba(229,165,10,.5);
+}
 
 /* ---------- Layout ---------- */
 main {
