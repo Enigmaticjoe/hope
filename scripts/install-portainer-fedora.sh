@@ -144,12 +144,15 @@ echo -e "\n${GREEN}╔═══════════════════�
 echo -e "${GREEN}║                  INSTALLATION COMPLETE                        ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Portainer Web UI:${NC}      http://$(hostname -I | awk '{print $1}'):${PORTAINER_PORT}"
+# Get primary IP address more reliably
+PRIMARY_IP=$(ip route get 1 2>/dev/null | awk '{print $7; exit}' || hostname -I | awk '{print $1}')
+echo -e "${BLUE}Portainer Web UI:${NC}      http://${PRIMARY_IP}:${PORTAINER_PORT}"
 echo -e "${BLUE}Portainer Tunnel:${NC}      Port ${PORTAINER_TUNNEL_PORT}"
 echo -e "${BLUE}Data Directory:${NC}        ${PORTAINER_DATA}"
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo -e "  1. Open your browser and navigate to: http://localhost:${PORTAINER_PORT}"
+echo -e "     Or from another machine: http://${PRIMARY_IP}:${PORTAINER_PORT}"
 echo -e "  2. Create your admin account (first login)"
 echo -e "  3. Connect to the local Docker environment"
 echo ""
