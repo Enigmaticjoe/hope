@@ -75,9 +75,20 @@ echo -e "${YELLOW}[3/5]${NC} Deploying Kali Wallpaper..."
 mkdir -p "$WALLPAPER_DIR"
 # Try primary URL, fallback if needed
 if ! wget -qO "$WALLPAPER_DIR/kali-dragon.png" "https://gitlab.com/kalilinux/packages/kali-wallpapers/-/raw/kali/master/2024.1/backgrounds/kali/kali-2024.1-16x9.png" 2>/dev/null; then
-    # Fallback to a stable alternative
-    wget -qO "$WALLPAPER_DIR/kali-dragon.png" "https://www.kali.org/images/kali-dragon-icon.svg" 2>/dev/null || \
-    echo -e "   ${YELLOW}[!]${NC} Wallpaper download failed - using system default"
+    # Fallback: download SVG with correct extension
+    if wget -qO "$WALLPAPER_DIR/kali-dragon.svg" "https://www.kali.org/images/kali-dragon-icon.svg" 2>/dev/null; then
+        # If imagemagick is available, convert to PNG, otherwise use SVG
+        if command -v convert &> /dev/null; then
+            convert "$WALLPAPER_DIR/kali-dragon.svg" "$WALLPAPER_DIR/kali-dragon.png" 2>/dev/null && \
+            rm "$WALLPAPER_DIR/kali-dragon.svg" || \
+            mv "$WALLPAPER_DIR/kali-dragon.svg" "$WALLPAPER_DIR/kali-dragon.png"
+        else
+            # Just rename if no conversion tool available (GNOME can handle SVG)
+            mv "$WALLPAPER_DIR/kali-dragon.svg" "$WALLPAPER_DIR/kali-dragon.png"
+        fi
+    else
+        echo -e "   ${YELLOW}[!]${NC} Wallpaper download failed - using system default"
+    fi
 fi
 
 # 4. Conky HUD (Red Team Ops)
@@ -186,11 +197,33 @@ dnf install -y -q \
 echo -e "${YELLOW}[2/4]${NC} Installing security tools..."
 # Note: metasploit-framework not available in standard repos - install manually from Rapid7
 
+# Define security tools to install
+SECURITY_TOOLS=(
+    nmap
+    wireshark
+    tcpdump
+    netcat
+    john
+    aircrack-ng
+    hydra
+    sqlmap
+    nikto
+    dirb
+    gobuster
+    masscan
+    enum4linux
+    smbclient
+    arp-scan
+    hashcat
+    ophcrack
+    macchanger
+)
+
 # Track unavailable packages
 UNAVAILABLE_TOOLS=()
 
-# Try to install each tool category
-for tool in nmap wireshark tcpdump netcat john aircrack-ng hydra sqlmap nikto dirb gobuster masscan enum4linux smbclient arp-scan hashcat ophcrack macchanger; do
+# Try to install each tool
+for tool in "${SECURITY_TOOLS[@]}"; do
     if ! dnf install -y -q "$tool" 2>/dev/null; then
         UNAVAILABLE_TOOLS+=("$tool")
     fi

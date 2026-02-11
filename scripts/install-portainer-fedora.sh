@@ -145,7 +145,7 @@ echo -e "${GREEN}║                  INSTALLATION COMPLETE                     
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 # Get primary IP address more reliably
-PRIMARY_IP=$(ip route get 1 2>/dev/null | awk '{print $7; exit}' || hostname -I | awk '{print $1}')
+PRIMARY_IP=$(ip route get 1 2>/dev/null | awk '/src/{print $NF; exit}' || hostname -I | awk '{print $1}')
 echo -e "${BLUE}Portainer Web UI:${NC}      http://${PRIMARY_IP}:${PORTAINER_PORT}"
 echo -e "${BLUE}Portainer Tunnel:${NC}      Port ${PORTAINER_TUNNEL_PORT}"
 echo -e "${BLUE}Data Directory:${NC}        ${PORTAINER_DATA}"
