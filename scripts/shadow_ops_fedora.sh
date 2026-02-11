@@ -145,10 +145,10 @@ ${color0}│  ${color2}Swap:      ${color}$swap/$swapmax - $swapperc% ${swapbar 
 ${color0}│  ${color2}Disk:      ${color}${fs_used /}/${fs_size /} ${fs_bar 8 /}
 ${color0}│
 ${color0}├─[ ${color1}NETWORK${color0} ]
-${color0}│  ${color2}Interface: ${color}${if_existing /sys/class/net/eth0}eth0${else}${if_existing /sys/class/net/enp0s3}enp0s3${else}${if_existing /sys/class/net/ens33}ens33${else}N/A${endif}${endif}${endif}
-${color0}│  ${color2}IP:        ${color}${if_existing /sys/class/net/eth0}${addr eth0}${else}${if_existing /sys/class/net/enp0s3}${addr enp0s3}${else}${if_existing /sys/class/net/ens33}${addr ens33}${else}N/A${endif}${endif}${endif}
-${color0}│  ${color2}Down:      ${color}${if_existing /sys/class/net/eth0}${downspeed eth0}/s${else}${if_existing /sys/class/net/enp0s3}${downspeed enp0s3}/s${else}${if_existing /sys/class/net/ens33}${downspeed ens33}/s${else}N/A${endif}${endif}${endif}
-${color0}│  ${color2}Up:        ${color}${if_existing /sys/class/net/eth0}${upspeed eth0}/s${else}${if_existing /sys/class/net/enp0s3}${upspeed enp0s3}/s${else}${if_existing /sys/class/net/ens33}${upspeed ens33}/s${else}N/A${endif}${endif}${endif}
+${color0}│  ${color2}Gateway IF:${color}${gw_iface}
+${color0}│  ${color2}IP:        ${color}${addr ${gw_iface}}
+${color0}│  ${color2}Down:      ${color}${downspeed ${gw_iface}}/s ${downspeedgraph ${gw_iface} 8,100}
+${color0}│  ${color2}Up:        ${color}${upspeed ${gw_iface}}/s ${upspeedgraph ${gw_iface} 8,100}
 ${color0}│
 ${color0}├─[ ${color1}PROCESSES${color0} ]
 ${color0}│  ${color2}Running:   ${color}$running_processes / $processes
@@ -345,8 +345,12 @@ echo -e "  ✓ Network scanners (nmap, masscan, arp-scan)"
 echo -e "  ✓ Wireless tools (aircrack-ng)"
 echo -e "  ✓ Password tools (john, hashcat, hydra)"
 echo -e "  ✓ Web tools (sqlmap, nikto, dirb, gobuster)"
-echo -e "  ✓ Exploitation frameworks (metasploit)"
 echo -e "  ✓ Python security libraries"
+if command -v msfconsole &> /dev/null; then
+    echo -e "  ✓ Exploitation frameworks (metasploit)"
+else
+    echo -e "  ⚠ Metasploit requires manual installation"
+fi
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo -e "  1. Reboot or log out/in to apply visual changes"
