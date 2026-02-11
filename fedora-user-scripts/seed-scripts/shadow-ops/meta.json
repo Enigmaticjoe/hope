@@ -1,0 +1,5 @@
+{
+  "name": "Shadow Ops — Kali AIO (Fedora Edition)",
+  "description": "Unattended deployment of Kali aesthetics + offensive toolset on Fedora 43. Includes visual transformation (Materia Dark, Flat Remix icons, Kali wallpaper, Conky HUD) and security toolkit installation (nmap, wireshark, hashcat, hydra, aircrack-ng, etc). WARNING: Requires host-level access — run on host or with privileged container.",
+  "created": 1739232000
+}
