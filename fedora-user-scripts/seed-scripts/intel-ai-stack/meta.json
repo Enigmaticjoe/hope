@@ -1,0 +1,5 @@
+{
+  "name": "Intel Arc 770 AI Stack — Ollama + Open WebUI + Abliterated Model",
+  "description": "Full local AI setup for Intel Arc 770 (16GB VRAM) on Fedora 43. Installs Intel GPU compute drivers, deploys Ollama via IPEX-LLM container for SYCL-accelerated inference, Open WebUI for chat, and pulls JOSIEFIED-Qwen3:8B (abliterated + fine-tuned, top uncensored model). Preconfigured for AMD 7700 + 32GB RAM. Everything runs locally, fully offline-capable.",
+  "created": 1739232000
+}

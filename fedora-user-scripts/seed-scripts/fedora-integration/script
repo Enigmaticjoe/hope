@@ -1,0 +1,234 @@
+#!/bin/bash
+# ==============================================================================
+# PROJECT CHIMERA | FEDORA 43 DESKTOP INTEGRATION
+# ==============================================================================
+# TARGET:    Fedora 43 with GNOME
+# ROLE:      Nerd Fonts, GNOME Extensions, System Polish
+# ==============================================================================
+
+set -e
+
+REAL_USER=${SUDO_USER:-$USER}
+USER_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}[!] Run as root: sudo bash <script>${NC}"
+    exit 1
+fi
+
+echo -e "${CYAN}"
+cat << "EOF"
+  ┌──────────────────────────────────────────┐
+  │    FEDORA 43 DESKTOP INTEGRATION         │
+  │    Fonts · Extensions · Polish           │
+  └──────────────────────────────────────────┘
+EOF
+echo -e "${NC}"
+
+# ==============================================================================
+# PHASE 1: NERD FONTS
+# ==============================================================================
+echo -e "${BLUE}[1/5]${NC} Installing Nerd Fonts..."
+
+FONT_DIR="/usr/share/fonts/nerd-fonts"
+mkdir -p "$FONT_DIR"
+
+NERD_FONTS_VERSION="v3.3.0"
+NERD_FONTS_BASE="https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONTS_VERSION}"
+
+declare -A FONTS=(
+    ["JetBrainsMono"]="JetBrainsMono.tar.xz"
+    ["FiraCode"]="FiraCode.tar.xz"
+    ["Hack"]="Hack.tar.xz"
+    ["CascadiaCode"]="CascadiaCode.tar.xz"
+    ["MesloLGS"]="Meslo.tar.xz"
+)
+
+for name in "${!FONTS[@]}"; do
+    file="${FONTS[$name]}"
+    dest="$FONT_DIR/$name"
+    if [ ! -d "$dest" ] || [ -z "$(ls -A "$dest" 2>/dev/null)" ]; then
+        echo -e "  Downloading $name Nerd Font..."
+        mkdir -p "$dest"
+        wget -qO "/tmp/$file" "$NERD_FONTS_BASE/$file" 2>/dev/null && \
+            tar xf "/tmp/$file" -C "$dest" 2>/dev/null && \
+            rm -f "/tmp/$file" && \
+            echo -e "  ${GREEN}✓${NC} $name installed" || \
+            echo -e "  ${YELLOW}[!]${NC} Failed to download $name"
+    else
+        echo -e "  ${GREEN}✓${NC} $name already installed"
+    fi
+done
+
+# Refresh font cache
+fc-cache -f 2>/dev/null
+echo -e "  ${GREEN}✓${NC} Font cache updated"
+
+# Set JetBrains Mono as the default monospace font
+if command -v gsettings &>/dev/null; then
+    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font Mono 11' 2>/dev/null || true
+fi
+
+# ==============================================================================
+# PHASE 2: GNOME EXTENSIONS
+# ==============================================================================
+echo -e "\n${BLUE}[2/5]${NC} Installing GNOME extensions..."
+
+# Install extension manager and gnome-extensions CLI
+dnf install -y gnome-extensions-app gnome-shell-extension-appindicator 2>/dev/null || true
+
+# Install extensions via Flatpak Extension Manager (most reliable method)
+flatpak install -y flathub com.mattjakeman.ExtensionManager 2>/dev/null || true
+
+# Install popular extensions from Fedora repos (where available)
+GNOME_EXTENSIONS=(
+    gnome-shell-extension-dash-to-dock
+    gnome-shell-extension-blur-my-shell
+    gnome-shell-extension-caffeine
+    gnome-shell-extension-gsconnect
+)
+
+for ext in "${GNOME_EXTENSIONS[@]}"; do
+    dnf install -y "$ext" 2>/dev/null || true
+done
+
+# Enable installed extensions
+for ext_uuid in \
+    "appindicatorsupport@rgcjonas.gmail.com" \
+    "dash-to-dock@micxgx.gmail.com" \
+    "blur-my-shell@auber" \
+    "caffeine@patapon.info"; do
+    sudo -u "$REAL_USER" gnome-extensions enable "$ext_uuid" 2>/dev/null || true
+done
+
+echo -e "  ${GREEN}✓${NC} GNOME extensions installed"
+echo -e "  ${YELLOW}TIP:${NC} Open Extension Manager to discover more extensions"
+
+# ==============================================================================
+# PHASE 3: FLATPAK APPS
+# ==============================================================================
+echo -e "\n${BLUE}[3/5]${NC} Installing essential Flatpak apps..."
+
+# Ensure Flathub is enabled
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+
+FLATPAK_APPS=(
+    "com.github.tchx84.Flatseal"          # Manage Flatpak permissions
+    "com.usebottles.bottles"               # Run Windows apps
+    "org.gnome.World.PikaBackup"           # Backups
+    "io.github.celluloid_player.Celluloid" # Video player
+    "org.gnome.Loupe"                      # Image viewer
+    "com.github.finefindus.eyedropper"     # Color picker
+    "org.gnome.Calculator"                 # Calculator
+)
+
+for app in "${FLATPAK_APPS[@]}"; do
+    echo -e "  Installing $(echo $app | rev | cut -d. -f1 | rev)..."
+    flatpak install -y flathub "$app" 2>/dev/null || true
+done
+
+echo -e "  ${GREEN}✓${NC} Flatpak apps installed"
+
+# ==============================================================================
+# PHASE 4: GNOME / SYSTEM TUNING
+# ==============================================================================
+echo -e "\n${BLUE}[4/5]${NC} Tuning GNOME settings..."
+
+if command -v gsettings &>/dev/null; then
+    # Window management
+    sudo -u "$REAL_USER" gsettings set org.gnome.mutter center-new-windows true 2>/dev/null || true
+    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close' 2>/dev/null || true
+
+    # Touchpad (if laptop)
+    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true 2>/dev/null || true
+
+    # Night light (reduces eye strain)
+    sudo -u "$REAL_USER" gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true 2>/dev/null || true
+    sudo -u "$REAL_USER" gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 3500 2>/dev/null || true
+
+    # File manager
+    sudo -u "$REAL_USER" gsettings set org.gnome.nautilus.preferences default-folder-viewer 'list-view' 2>/dev/null || true
+    sudo -u "$REAL_USER" gsettings set org.gtk.Settings.FileChooser sort-directories-first true 2>/dev/null || true
+
+    # Clock
+    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.interface clock-show-weekday true 2>/dev/null || true
+    sudo -u "$REAL_USER" gsettings set org.gnome.desktop.interface clock-show-seconds true 2>/dev/null || true
+
+    # Terminal — set JetBrains Mono as font
+    sudo -u "$REAL_USER" gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")/  font 'JetBrainsMono Nerd Font Mono 11' 2>/dev/null || true
+
+    echo -e "  ${GREEN}✓${NC} GNOME settings tuned"
+fi
+
+# ==============================================================================
+# PHASE 5: SYSTEM PERFORMANCE TWEAKS
+# ==============================================================================
+echo -e "\n${BLUE}[5/5]${NC} Applying system performance tweaks..."
+
+# Increase inotify watch limit (helps VS Code, file watchers)
+if ! grep -q "fs.inotify.max_user_watches" /etc/sysctl.d/99-chimera.conf 2>/dev/null; then
+    cat > /etc/sysctl.d/99-chimera.conf << 'SYSCTL'
+# CHIMERA — Developer-friendly sysctl settings
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=1024
+vm.swappiness=10
+SYSCTL
+    sysctl --system > /dev/null 2>&1
+    echo -e "  ${GREEN}✓${NC} inotify watch limit raised to 524288"
+    echo -e "  ${GREEN}✓${NC} vm.swappiness set to 10 (prefer RAM over swap)"
+fi
+
+# Install and enable TRIM for SSDs
+systemctl enable fstrim.timer 2>/dev/null || true
+echo -e "  ${GREEN}✓${NC} SSD TRIM timer enabled"
+
+# Install useful system tools
+dnf install -y \
+    dnf-plugins-core \
+    fastfetch \
+    duf \
+    ncdu \
+    powertop \
+    tuned \
+    2>/dev/null || true
+
+# Enable tuned with desktop profile
+systemctl enable --now tuned 2>/dev/null || true
+tuned-adm profile desktop 2>/dev/null || true
+echo -e "  ${GREEN}✓${NC} tuned enabled with 'desktop' profile"
+
+# ==============================================================================
+# DONE
+# ==============================================================================
+echo ""
+echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║         FEDORA DESKTOP INTEGRATION COMPLETE                   ║${NC}"
+echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${CYAN}Fonts:${NC}"
+echo -e "  ✓ JetBrains Mono Nerd Font (set as default monospace)"
+echo -e "  ✓ Fira Code, Hack, Cascadia Code, Meslo LGS"
+echo ""
+echo -e "${CYAN}GNOME Extensions:${NC}"
+echo -e "  ✓ Dash to Dock, AppIndicator, Blur My Shell"
+echo -e "  ✓ Caffeine, GSConnect"
+echo -e "  ✓ Extension Manager installed for discovering more"
+echo ""
+echo -e "${CYAN}Flatpak Apps:${NC}"
+echo -e "  ✓ Flatseal, Bottles, Pika Backup, Celluloid, Eyedropper"
+echo ""
+echo -e "${CYAN}System Tweaks:${NC}"
+echo -e "  ✓ inotify watches: 524288 (VS Code friendly)"
+echo -e "  ✓ Swappiness: 10 (prefer RAM)"
+echo -e "  ✓ SSD TRIM enabled"
+echo -e "  ✓ tuned: desktop profile"
+echo ""
+echo -e "${YELLOW}Next:${NC} Log out/in to activate GNOME extensions"
+echo ""

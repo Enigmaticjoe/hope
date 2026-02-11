@@ -1,0 +1,5 @@
+{
+  "name": "Dev Toolkit — Full Stack Developer Environment",
+  "description": "Installs VS Code, Neovim, Node.js, Python dev tools (ruff, mypy, poetry), Rust, Go, modern CLI (ripgrep, fd, bat, eza, fzf, lazygit, delta), Zsh + Oh My Zsh + Starship prompt, Podman/Docker, database tools, and build essentials. Designed for Fedora 43.",
+  "created": 1739232000
+}

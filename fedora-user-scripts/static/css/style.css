@@ -1,0 +1,252 @@
+/* ============================================================
+   Fedora User Scripts — Stylesheet
+   ============================================================ */
+
+:root {
+  --bg:          #1e1e2e;
+  --bg-surface:  #282840;
+  --bg-panel:    #313148;
+  --border:      #44446a;
+  --text:        #cdd6f4;
+  --text-dim:    #8888aa;
+  --accent:      #3584e4;      /* Fedora blue */
+  --accent-hover:#4a9cf5;
+  --green:       #2ec27e;
+  --green-hover: #40d890;
+  --red:         #e05050;
+  --red-hover:   #f06060;
+  --yellow:      #e5a50a;
+  --radius:      6px;
+  --mono:        "JetBrains Mono", "Fira Code", "Source Code Pro", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: "Inter", "Cantarell", system-ui, sans-serif;
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ---------- Header ---------- */
+header {
+  background: linear-gradient(135deg, #3584e4 0%, #1a5fb4 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid var(--border);
+}
+.header-inner { max-width: 1400px; margin: 0 auto; }
+.header-title-row { display: flex; align-items: center; gap: .65rem; }
+header h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+.subtitle { color: rgba(255,255,255,.75); font-size: .85rem; margin-top: .15rem; }
+
+/* Deployment badge */
+.badge {
+  display: inline-block;
+  padding: .15rem .55rem;
+  border-radius: 10px;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.badge-container {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.35);
+}
+.badge-host {
+  background: rgba(46,194,126,.3);
+  color: #a6e3a1;
+  border: 1px solid rgba(46,194,126,.5);
+}
+.badge-native {
+  background: rgba(229,165,10,.3);
+  color: #fce94f;
+  border: 1px solid rgba(229,165,10,.5);
+}
+
+/* ---------- Layout ---------- */
+main {
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: calc(100vh - 76px);
+}
+
+/* ---------- Script list panel ---------- */
+#script-list-panel {
+  width: 280px;
+  min-width: 220px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+}
+#script-list-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+#script-list-panel h2 { font-size: 1rem; font-weight: 600; }
+
+#script-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+#script-list li {
+  padding: .65rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+#script-list li:hover { background: var(--bg-panel); }
+#script-list li.active { background: var(--accent); color: #fff; }
+#script-list li .script-item-name { font-weight: 500; }
+#script-list li .script-item-desc {
+  font-size: .78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+#script-list li.active .script-item-desc { color: rgba(255,255,255,.7); }
+#script-list li .script-item-schedule {
+  font-size: .7rem;
+  color: var(--yellow);
+  margin-top: 2px;
+}
+
+.empty-state { padding: 2rem 1rem; text-align: center; color: var(--text-dim); }
+
+/* ---------- Editor panel ---------- */
+#editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#editor-panel.hidden { display: none; }
+
+#editor-panel .panel-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  flex-wrap: wrap;
+}
+.script-info { display: flex; gap: .5rem; flex: 1; min-width: 250px; }
+.script-info input {
+  flex: 1;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .4rem .65rem;
+  color: var(--text);
+  font-size: .9rem;
+}
+.script-info input:focus { outline: none; border-color: var(--accent); }
+
+.panel-actions { display: flex; gap: .4rem; }
+
+/* ---------- Schedule row ---------- */
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem 1rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.schedule-row label { font-size: .85rem; font-weight: 500; }
+.schedule-row select,
+.schedule-row input[type="text"] {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .35rem .5rem;
+  color: var(--text);
+  font-size: .85rem;
+}
+.schedule-row select:focus,
+.schedule-row input:focus { outline: none; border-color: var(--accent); }
+.schedule-status { font-size: .8rem; color: var(--green); }
+
+/* ---------- Code editor ---------- */
+#editor-container { flex: 1; overflow: hidden; }
+.CodeMirror {
+  height: 100% !important;
+  font-family: var(--mono);
+  font-size: .9rem;
+}
+
+/* ---------- Output ---------- */
+#output-section {
+  border-top: 1px solid var(--border);
+  background: #0d0d1a;
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  min-height: 120px;
+}
+#output-section.hidden { display: none; }
+.output-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .4rem .75rem;
+  border-bottom: 1px solid var(--border);
+}
+.output-header h3 { font-size: .85rem; flex: 1; }
+#output-console {
+  flex: 1;
+  overflow-y: auto;
+  padding: .5rem .75rem;
+  font-family: var(--mono);
+  font-size: .82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #a6e3a1;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .4rem .85rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+  color: #fff;
+}
+.btn:active { opacity: .85; }
+.btn-sm { padding: .25rem .55rem; font-size: .78rem; }
+.btn-primary   { background: var(--accent);  }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-success   { background: var(--green);   }
+.btn-success:hover { background: var(--green-hover); }
+.btn-danger    { background: var(--red);     }
+.btn-danger:hover { background: var(--red-hover); }
+.btn-secondary { background: #555; }
+.btn-secondary:hover { background: #666; }
+
+.hidden { display: none !important; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 700px) {
+  main { flex-direction: column; height: auto; }
+  #script-list-panel { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
+}
