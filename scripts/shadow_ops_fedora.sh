@@ -73,7 +73,12 @@ fi
 # 3. Wallpaper (The Dragon)
 echo -e "${YELLOW}[3/5]${NC} Deploying Kali Wallpaper..."
 mkdir -p "$WALLPAPER_DIR"
-wget -qO "$WALLPAPER_DIR/kali-dragon.png" "https://gitlab.com/kalilinux/packages/kali-wallpapers/-/raw/kali/master/2024.1/backgrounds/kali/kali-2024.1-16x9.png"
+# Try primary URL, fallback if needed
+if ! wget -qO "$WALLPAPER_DIR/kali-dragon.png" "https://gitlab.com/kalilinux/packages/kali-wallpapers/-/raw/kali/master/2024.1/backgrounds/kali/kali-2024.1-16x9.png" 2>/dev/null; then
+    # Fallback to a stable alternative
+    wget -qO "$WALLPAPER_DIR/kali-dragon.png" "https://www.kali.org/images/kali-dragon-icon.svg" 2>/dev/null || \
+    echo -e "   ${YELLOW}[!]${NC} Wallpaper download failed - using system default"
+fi
 
 # 4. Conky HUD (Red Team Ops)
 echo -e "${YELLOW}[4/5]${NC} Configuring HUD (Conky)..."
@@ -140,9 +145,10 @@ ${color0}│  ${color2}Swap:      ${color}$swap/$swapmax - $swapperc% ${swapbar 
 ${color0}│  ${color2}Disk:      ${color}${fs_used /}/${fs_size /} ${fs_bar 8 /}
 ${color0}│
 ${color0}├─[ ${color1}NETWORK${color0} ]
-${color0}│  ${color2}IP:        ${color}${addr eth0}
-${color0}│  ${color2}Down:      ${color}${downspeed eth0}/s ${downspeedgraph eth0 8,100}
-${color0}│  ${color2}Up:        ${color}${upspeed eth0}/s ${upspeedgraph eth0 8,100}
+${color0}│  ${color2}Interface: ${color}${if_existing /sys/class/net/eth0}eth0${else}${if_existing /sys/class/net/enp0s3}enp0s3${else}${if_existing /sys/class/net/ens33}ens33${else}N/A${endif}${endif}${endif}
+${color0}│  ${color2}IP:        ${color}${if_existing /sys/class/net/eth0}${addr eth0}${else}${if_existing /sys/class/net/enp0s3}${addr enp0s3}${else}${if_existing /sys/class/net/ens33}${addr ens33}${else}N/A${endif}${endif}${endif}
+${color0}│  ${color2}Down:      ${color}${if_existing /sys/class/net/eth0}${downspeed eth0}/s${else}${if_existing /sys/class/net/enp0s3}${downspeed enp0s3}/s${else}${if_existing /sys/class/net/ens33}${downspeed ens33}/s${else}N/A${endif}${endif}${endif}
+${color0}│  ${color2}Up:        ${color}${if_existing /sys/class/net/eth0}${upspeed eth0}/s${else}${if_existing /sys/class/net/enp0s3}${upspeed enp0s3}/s${else}${if_existing /sys/class/net/ens33}${upspeed ens33}/s${else}N/A${endif}${endif}${endif}
 ${color0}│
 ${color0}├─[ ${color1}PROCESSES${color0} ]
 ${color0}│  ${color2}Running:   ${color}$running_processes / $processes
@@ -178,6 +184,7 @@ dnf install -y -q \
 
 # Install security and pentesting tools
 echo -e "${YELLOW}[2/4]${NC} Installing security tools..."
+# Note: metasploit-framework not available in standard repos - install manually from Rapid7
 dnf install -y -q \
     nmap \
     wireshark \
@@ -186,7 +193,6 @@ dnf install -y -q \
     john \
     aircrack-ng \
     hydra \
-    metasploit-framework \
     sqlmap \
     nikto \
     dirb \
@@ -198,6 +204,11 @@ dnf install -y -q \
     hashcat \
     ophcrack \
     macchanger 2>/dev/null || echo -e "   ${YELLOW}[!]${NC} Some tools may not be available in Fedora repos"
+
+# Inform about Metasploit if not installed
+if ! command -v msfconsole &> /dev/null; then
+    echo -e "   ${YELLOW}[!]${NC} Metasploit not installed - requires manual install from: https://www.rapid7.com/products/metasploit/download/"
+fi
 
 # Install Python security libraries
 echo -e "${YELLOW}[3/4]${NC} Installing Python security libraries..."
