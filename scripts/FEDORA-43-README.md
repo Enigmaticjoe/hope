@@ -158,9 +158,7 @@ conky -c ~/.config/conky/conky.conf
 conky -c ~/.config/conky/conky.conf -d
 ```
 
-**Network interface not showing in Conky:**
-- Edit `~/.config/conky/conky.conf`
-- Replace `eth0` with your actual interface name (find with `ip link`)
+**Note:** The Conky configuration uses `${gw_iface}` to automatically detect your default gateway interface, so no manual network interface configuration is needed.
 
 **Tools not available:**
 - Some security tools may not be in default Fedora repos

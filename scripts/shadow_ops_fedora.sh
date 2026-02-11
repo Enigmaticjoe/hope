@@ -185,25 +185,21 @@ dnf install -y -q \
 # Install security and pentesting tools
 echo -e "${YELLOW}[2/4]${NC} Installing security tools..."
 # Note: metasploit-framework not available in standard repos - install manually from Rapid7
-dnf install -y -q \
-    nmap \
-    wireshark \
-    tcpdump \
-    netcat \
-    john \
-    aircrack-ng \
-    hydra \
-    sqlmap \
-    nikto \
-    dirb \
-    gobuster \
-    masscan \
-    enum4linux \
-    smbclient \
-    arp-scan \
-    hashcat \
-    ophcrack \
-    macchanger 2>/dev/null || echo -e "   ${YELLOW}[!]${NC} Some tools may not be available in Fedora repos"
+
+# Track unavailable packages
+UNAVAILABLE_TOOLS=()
+
+# Try to install each tool category
+for tool in nmap wireshark tcpdump netcat john aircrack-ng hydra sqlmap nikto dirb gobuster masscan enum4linux smbclient arp-scan hashcat ophcrack macchanger; do
+    if ! dnf install -y -q "$tool" 2>/dev/null; then
+        UNAVAILABLE_TOOLS+=("$tool")
+    fi
+done
+
+# Report any unavailable tools
+if [ ${#UNAVAILABLE_TOOLS[@]} -gt 0 ]; then
+    echo -e "   ${YELLOW}[!]${NC} The following tools are not available in Fedora repos: ${UNAVAILABLE_TOOLS[*]}"
+fi
 
 # Inform about Metasploit if not installed
 if ! command -v msfconsole &> /dev/null; then
