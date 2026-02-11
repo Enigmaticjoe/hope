@@ -239,9 +239,9 @@ if [ ${#UNAVAILABLE_TOOLS[@]} -gt 0 ]; then
     echo -e "   ${YELLOW}[!]${NC} The following tools are not available in Fedora repos: ${UNAVAILABLE_TOOLS[*]}"
 fi
 
-# Inform about Metasploit if not installed
-# Note: Metasploit is intentionally not in the package list above
-# It requires manual installation from Rapid7's repository
+# Inform about Metasploit - intentionally excluded from SECURITY_TOOLS array
+# Metasploit Framework requires manual installation from Rapid7's repository
+# as it's not available in standard Fedora or RPM Fusion repos
 if ! command -v msfconsole &> /dev/null; then
     echo -e "   ${YELLOW}[INFO]${NC} Metasploit Framework requires manual installation from: https://www.rapid7.com/products/metasploit/download/"
 fi
