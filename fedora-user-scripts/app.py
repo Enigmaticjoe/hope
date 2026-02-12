@@ -221,9 +221,7 @@ def api_set_schedule(script_id: str):
     if schedule and not re.fullmatch(r"(@reboot|(@(yearly|annually|monthly|weekly|daily|hourly))|([^\s]+\s+){4}[^\s]+)", schedule):
         return jsonify({"error": "Invalid cron expression"}), 400
 
-    cron = _get_cron_manager()
-    if cron is None:
-        return jsonify({"error": "Cron service unavailable on this host"}), 503
+    cron = CronManager()
 
     if not schedule:
         cron.remove(script_id)
