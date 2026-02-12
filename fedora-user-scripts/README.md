@@ -87,6 +87,11 @@ Environment variables (set in the systemd service file):
     └── ...
 ```
 
+
+## Included Seed Scripts
+
+- **Deployment Audit — Host Readiness Snapshot**: Generates a timestamped deployment report (OS, CPU/memory, storage, network, security posture, failed services, container runtime status, and update posture) to validate host readiness before rollout.
+
 ## Uninstall
 
 ```bash

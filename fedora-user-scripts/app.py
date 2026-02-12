@@ -4,6 +4,7 @@
 import json
 import os
 import queue
+import re
 import signal
 import subprocess
 import threading
@@ -205,13 +206,21 @@ def api_set_schedule(script_id: str):
 
     data = request.get_json(force=True)
     schedule = data.get("schedule", "")  # cron expression or empty to disable
+    schedule = schedule.strip()
+
+    if schedule and not re.fullmatch(r"(@reboot|(@(yearly|annually|monthly|weekly|daily|hourly))|([^\s]+\s+){4}[^\s]+)", schedule):
+        return jsonify({"error": "Invalid cron expression"}), 400
+
     cron = CronManager()
 
     if not schedule:
         cron.remove(script_id)
     else:
         script_path = str((_script_dir(script_id) / "script").resolve())
-        cron.set_schedule(script_id, meta["name"], script_path, schedule)
+        try:
+            cron.set_schedule(script_id, meta["name"], script_path, schedule)
+        except ValueError:
+            return jsonify({"error": "Invalid cron expression"}), 400
 
     return jsonify({"schedule": cron.get_schedule(script_id)})
 
@@ -239,6 +248,7 @@ def api_run_script(script_id: str):
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
+                preexec_fn=os.setsid,
             )
             with _running_lock:
                 _running[run_id]["pid"] = proc.pid
