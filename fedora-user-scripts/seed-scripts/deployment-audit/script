@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+REPORT_DIR="${HOME}/fedora-user-scripts-reports"
+mkdir -p "$REPORT_DIR"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+REPORT_FILE="$REPORT_DIR/deployment-audit-${STAMP}.txt"
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+section() {
+  local title="$1"
+  {
+    echo
+    echo "==== ${title} ===="
+  } >>"$REPORT_FILE"
+}
+
+append_cmd() {
+  local label="$1"
+  shift
+  {
+    echo "-- ${label}"
+    "$@" 2>&1 || true
+  } >>"$REPORT_FILE"
+}
+
+{
+  echo "Deployment Audit Report"
+  echo "Generated: $(date -Is)"
+  echo "Host: $(hostnamectl --static 2>/dev/null || hostname)"
+  echo "User: ${USER}"
+  echo "Kernel: $(uname -r)"
+} >"$REPORT_FILE"
+
+section "OS + Hardware"
+append_cmd "OS release" bash -lc 'cat /etc/os-release'
+append_cmd "CPU" lscpu
+append_cmd "Memory" free -h
+
+section "Storage"
+append_cmd "Filesystem usage" df -hT
+append_cmd "Top-level block devices" lsblk -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT
+
+section "Network"
+append_cmd "IP addresses" ip -brief addr
+append_cmd "Routes" ip route
+append_cmd "Listening ports" ss -tulpn
+
+section "Security"
+if have getenforce; then
+  append_cmd "SELinux mode" getenforce
+fi
+if have firewall-cmd; then
+  append_cmd "Firewall state" firewall-cmd --state
+  append_cmd "Firewall active zones" firewall-cmd --get-active-zones
+fi
+
+section "Services"
+append_cmd "Failed system services" systemctl --failed --no-pager
+append_cmd "Failed user services" systemctl --user --failed --no-pager
+
+section "Containers"
+if have podman; then
+  append_cmd "Podman info" podman info
+  append_cmd "Running podman containers" podman ps
+fi
+if have docker; then
+  append_cmd "Docker info" docker info
+  append_cmd "Running docker containers" docker ps
+fi
+
+section "Update posture"
+if have dnf; then
+  append_cmd "DNF check-update" dnf -q check-update
+fi
+
+section "Quick scorecard"
+{
+  echo "-- Checks"
+  if systemctl --failed --no-legend | grep -q .; then
+    echo "[WARN] Failed system services detected"
+  else
+    echo "[OK] No failed system services"
+  fi
+
+  if df --output=pcent / | tail -n1 | tr -dc '0-9' | awk '{exit !($1 < 90)}'; then
+    echo "[OK] Root filesystem usage under 90%"
+  else
+    echo "[WARN] Root filesystem usage is 90% or higher"
+  fi
+
+  if have getenforce && [ "$(getenforce)" = "Enforcing" ]; then
+    echo "[OK] SELinux enforcing"
+  elif have getenforce; then
+    echo "[WARN] SELinux not enforcing"
+  fi
+} >>"$REPORT_FILE"
+
+echo "Deployment audit complete: $REPORT_FILE"

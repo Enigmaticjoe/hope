@@ -1,0 +1,5 @@
+{
+  "name": "Deployment Audit — Host Readiness Snapshot",
+  "description": "Creates a timestamped deployment-readiness report with CPU, memory, disk, network, firewall, SELinux, service, container runtime, and update-state checks. Designed for Fedora hosts before stack rollout.",
+  "created": 1739404800
+}
