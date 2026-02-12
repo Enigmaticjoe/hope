@@ -93,6 +93,14 @@ def _list_scripts() -> list[dict]:
     return scripts
 
 
+def _get_cron_manager() -> CronManager | None:
+    try:
+        return CronManager()
+    except Exception:
+        return None
+
+
+
 # ---------------------------------------------------------------------------
 # Routes — Pages
 # ---------------------------------------------------------------------------
@@ -123,10 +131,10 @@ def api_info():
 
 @app.route("/api/scripts", methods=["GET"])
 def api_list_scripts():
-    cron = CronManager()
+    cron = _get_cron_manager()
     scripts = _list_scripts()
     for s in scripts:
-        s["schedule"] = cron.get_schedule(s["id"])
+        s["schedule"] = cron.get_schedule(s["id"]) if cron else ""
     return jsonify(scripts)
 
 
@@ -156,8 +164,8 @@ def api_get_script(script_id: str):
         return jsonify({"error": "Not found"}), 404
     meta["id"] = script_id
     meta["script"] = _read_script(script_id)
-    cron = CronManager()
-    meta["schedule"] = cron.get_schedule(script_id)
+    cron = _get_cron_manager()
+    meta["schedule"] = cron.get_schedule(script_id) if cron else ""
     return jsonify(meta)
 
 
@@ -187,7 +195,9 @@ def api_delete_script(script_id: str):
     if not d.exists():
         return jsonify({"error": "Not found"}), 404
     # Remove cron job if any
-    CronManager().remove(script_id)
+    cron = _get_cron_manager()
+    if cron:
+        cron.remove(script_id)
     # Remove files
     import shutil
     shutil.rmtree(d)
@@ -238,20 +248,41 @@ def api_run_script(script_id: str):
     script_path = str((_script_dir(script_id) / "script").resolve())
     run_id = str(uuid.uuid4())[:12]
 
+    data = request.get_json(silent=True) or {}
+    input_text = data.get("input", "")
+    run_as_sudo = bool(data.get("run_as_sudo", False))
+
+    if not isinstance(input_text, str):
+        return jsonify({"error": "Input must be a string"}), 400
+
     q: queue.Queue[str | None] = queue.Queue()
 
     def _run():
         try:
+            command = ["/bin/bash", script_path]
+            if run_as_sudo:
+                command = ["sudo", "-n", "/bin/bash", script_path]
+                q.put("[sudo mode enabled: requires passwordless sudo for this command]\n")
+
             proc = subprocess.Popen(
-                ["/bin/bash", script_path],
+                command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                stdin=subprocess.PIPE,
                 text=True,
                 bufsize=1,
                 preexec_fn=os.setsid,
             )
             with _running_lock:
                 _running[run_id]["pid"] = proc.pid
+
+            if input_text and proc.stdin:
+                proc.stdin.write(input_text)
+                if not input_text.endswith("\n"):
+                    proc.stdin.write("\n")
+                proc.stdin.flush()
+            if proc.stdin:
+                proc.stdin.close()
 
             for line in proc.stdout:  # type: ignore[union-attr]
                 q.put(line)

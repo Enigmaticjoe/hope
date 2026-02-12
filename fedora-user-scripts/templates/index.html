@@ -69,6 +69,16 @@
         <span id="schedule-status" class="schedule-status"></span>
       </div>
 
+      <!-- Run options -->
+      <div class="run-options-row">
+        <label for="run-input">Run input (stdin):</label>
+        <textarea id="run-input" rows="3" placeholder="Optional input passed to script stdin (supports multi-line)"></textarea>
+        <label class="checkbox-inline" for="run-sudo">
+          <input id="run-sudo" type="checkbox">
+          Run as sudo (requires passwordless sudo)
+        </label>
+      </div>
+
       <!-- Code editor -->
       <div id="editor-container">
         <textarea id="code-editor"></textarea>
