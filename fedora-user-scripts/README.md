@@ -9,6 +9,8 @@ Create, edit, schedule, and run bash scripts from a clean web UI without touchin
 - **Script Management** — Create, edit, rename, and delete bash scripts from the browser
 - **Code Editor** — Syntax-highlighted bash editor (CodeMirror with Dracula theme)
 - **One-Click Execution** — Run scripts and see real-time streaming output
+- **Script Input Support** — Provide optional stdin text when running scripts
+- **Optional sudo Execution** — Run scripts with sudo (`sudo -n`) when passwordless sudo is configured
 - **Cron Scheduling** — Schedule scripts with preset intervals or custom cron expressions
 - **Stop Running Scripts** — Kill long-running scripts from the UI
 - **Keyboard Shortcuts** — Ctrl+S to save
@@ -86,6 +88,11 @@ Environment variables (set in the systemd service file):
     │   └── script      # The bash script
     └── ...
 ```
+
+
+## Included Seed Scripts
+
+- **Deployment Audit — Host Readiness Snapshot**: Generates a timestamped deployment report (OS, CPU/memory, storage, network, security posture, failed services, container runtime status, and update posture) to validate host readiness before rollout.
 
 ## Uninstall
 

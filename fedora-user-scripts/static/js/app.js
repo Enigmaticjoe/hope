@@ -24,6 +24,8 @@
   const $outputSection = document.getElementById("output-section");
   const $outputConsole = document.getElementById("output-console");
   const $btnStop       = document.getElementById("btn-stop");
+  const $runInput      = document.getElementById("run-input");
+  const $runSudo       = document.getElementById("run-sudo");
 
   // ---- Init CodeMirror ----
   function initEditor() {
@@ -177,7 +179,13 @@
     $outputConsole.textContent = "";
     $btnStop.classList.remove("hidden");
 
-    const res = await api(`/api/scripts/${activeId}/run`, { method: "POST" });
+    const res = await api(`/api/scripts/${activeId}/run`, {
+      method: "POST",
+      body: JSON.stringify({
+        input: $runInput.value,
+        run_as_sudo: $runSudo.checked,
+      }),
+    });
     currentRunId = res.run_id;
     openStream(res.run_id);
   }

@@ -180,6 +180,37 @@ main {
 .schedule-row input:focus { outline: none; border-color: var(--accent); }
 .schedule-status { font-size: .8rem; color: var(--green); }
 
+
+/* ---------- Run options ---------- */
+.run-options-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .4rem;
+  padding: .5rem 1rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+.run-options-row label { font-size: .82rem; font-weight: 500; }
+#run-input {
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .45rem .6rem;
+  color: var(--text);
+  font-size: .84rem;
+  font-family: var(--mono);
+  resize: vertical;
+}
+#run-input:focus { outline: none; border-color: var(--accent); }
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--text-dim);
+}
+.checkbox-inline input { accent-color: var(--accent); }
+
 /* ---------- Code editor ---------- */
 #editor-container { flex: 1; overflow: hidden; }
 .CodeMirror {
